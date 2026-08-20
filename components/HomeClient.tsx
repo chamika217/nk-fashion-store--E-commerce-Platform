@@ -8,6 +8,7 @@ import type { Category, Product } from "@/lib/types";
 // Animated components
 import AnimatedHero from "./home/AnimatedHero";
 import AnimatedCategoryGrid from "./home/AnimatedCategoryGrid";
+import BrandPhilosophy from "./home/BrandPhilosophy";
 import AnimatedProductGrid from "./home/AnimatedProductGrid";
 import AnimatedCtaStrip from "./home/AnimatedCtaStrip";
 
@@ -47,10 +48,13 @@ export default function HomeClient() {
       {/* ── Section 2: Category Shortcuts ── */}
       <AnimatedCategoryGrid categories={categories} />
 
-      {/* ── Section 3: Featured Products ── */}
+      {/* ── Section 3: Brand Philosophy / Trust indicators ── */}
+      <BrandPhilosophy />
+
+      {/* ── Section 4: Featured Products ── */}
       <AnimatedProductGrid products={featuredProducts} loading={loading} />
 
-      {/* ── Section 4: CTA Strip ── */}
+      {/* ── Section 5: CTA Strip ── */}
       <AnimatedCtaStrip />
     </main>
   );
