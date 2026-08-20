@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -30,6 +30,18 @@ function friendlyError(code: string): string {
 }
 
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <main className="flex-1 bg-ivory flex items-center justify-center py-16">
+        <p className="text-sm text-gray animate-pulse">Loading…</p>
+      </main>
+    }>
+      <SignUpForm />
+    </Suspense>
+  );
+}
+
+function SignUpForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const redirectTo   = safeRedirect(searchParams.get("redirect"), "/account");

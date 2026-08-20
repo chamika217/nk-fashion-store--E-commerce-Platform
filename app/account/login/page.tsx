@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -33,6 +33,18 @@ function friendlyError(code: string): string {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="flex-1 bg-ivory flex items-center justify-center py-16">
+        <p className="text-sm text-gray animate-pulse">Loading…</p>
+      </main>
+    }>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const redirectTo   = safeRedirect(searchParams.get("redirect"), "/account");
