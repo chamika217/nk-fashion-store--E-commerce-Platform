@@ -5,6 +5,8 @@ import Link from "next/link";
 import { getOrders } from "@/lib/orderService";
 import type { Order } from "@/lib/types";
 import AdminShell from "@/components/admin/AdminShell";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+import { hasPermission } from "@/lib/permissions";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -151,7 +153,20 @@ function CustomerOrders({ customer }: { customer: DerivedCustomer }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+function AccessDenied() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+      <p className="text-2xl">🔒</p>
+      <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
+      <p className="text-sm text-gray max-w-xs">
+        You don&apos;t have permission to access this section.
+      </p>
+    </div>
+  );
+}
+
 function CustomersContent() {
+  const { adminProfile, role }  = useAdminAuth();
   const [orders, setOrders]     = useState<Order[]>([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState("");
@@ -164,6 +179,11 @@ function CustomersContent() {
       .then(setOrders)
       .finally(() => setLoading(false));
   }, []);
+
+  // ── Permission guard ────────────────────────────────────────────────────
+  if (adminProfile && !hasPermission(role, "customers:view")) {
+    return <AccessDenied />;
+  }
 
   // Derived customers from orders
   const allCustomers = useMemo(

@@ -7,6 +7,7 @@ import { getProducts } from "@/lib/productService";
 import type { Order, Product } from "@/lib/types";
 import AdminShell from "@/components/admin/AdminShell";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { hasPermission } from "@/lib/permissions";
 
 // ── Date range filter options ─────────────────────────────────────────────────
 // Section 1 (summary cards) always shows ALL-TIME totals.
@@ -129,8 +130,20 @@ function HorizBar({ pct, color }: { pct: number; color: string }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+function AccessDenied() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+      <p className="text-2xl">🔒</p>
+      <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
+      <p className="text-sm text-gray max-w-xs">
+        You don&apos;t have permission to access this section.
+      </p>
+    </div>
+  );
+}
+
 function ReportsContent() {
-  const { adminProfile }       = useAdminAuth();
+  const { adminProfile, role } = useAdminAuth();
   const [orders, setOrders]    = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading]  = useState(true);
@@ -142,17 +155,9 @@ function ReportsContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  // ── Owner guard ──────────────────────────────────────────────────────────
-  if (adminProfile && adminProfile.role === "staff") {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
-        <p className="text-2xl">🔒</p>
-        <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
-        <p className="text-sm text-gray max-w-xs">
-          Reports & Analytics are available to store owners only.
-        </p>
-      </div>
-    );
+  // ── Permission guard ─────────────────────────────────────────────────────
+  if (adminProfile && !hasPermission(role, "reports:view")) {
+    return <AccessDenied />;
   }
 
   // ── Section 1: All-time summary (not range-filtered) ─────────────────────

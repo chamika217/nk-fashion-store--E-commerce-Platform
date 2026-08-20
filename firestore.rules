@@ -21,16 +21,30 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Orders — anyone can create (guest checkout), admin-only read/update/delete
+    // Orders — anyone can create (guest checkout) and count (for order number generation)
+    // admin-only read/update/delete
     match /orders/{orderId} {
       allow create: if true;
+      allow list:   if true;   // needed for getCountFromServer() in order number generation
       allow read, update, delete: if isAdmin();
     }
 
     // Admins — each admin can read only their own doc, no client writes
     match /admins/{adminId} {
       allow read: if request.auth != null && request.auth.uid == adminId;
-      allow write: if false;
+      // Allow any authenticated admin to update roleId field (for role assignment UI)
+      // For stricter control, restrict to users:manage permission — see note above.
+      allow update: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow create, delete: if false;
+    }
+
+    // Roles — readable by any authenticated admin, writable only by users:manage admins
+    // Note: Full permission-chain verification (admins/{uid} → roles/{roleId} → permissions)
+    // is complex in Firestore rules. This approximation allows any authenticated admin to
+    // write roles — for stronger enforcement, use Firebase Admin SDK server-side validation.
+    match /roles/{roleId} {
+      allow read: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Settings — public read, admin-only write

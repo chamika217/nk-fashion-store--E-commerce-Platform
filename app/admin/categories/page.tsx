@@ -11,6 +11,7 @@ import { seedCategories } from "@/lib/seedCategories";
 import type { Category } from "@/lib/types";
 import AdminShell from "@/components/admin/AdminShell";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { hasPermission } from "@/lib/permissions";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -245,8 +246,21 @@ function CategoryForm({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+function AccessDenied() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+      <p className="text-2xl">🔒</p>
+      <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
+      <p className="text-sm text-gray max-w-xs">
+        You don&apos;t have permission to access this section.
+      </p>
+    </div>
+  );
+}
+
 function CategoriesContent() {
-  const { adminProfile }            = useAdminAuth();
+  const { adminProfile, role }      = useAdminAuth();
+  const canManage                   = hasPermission(role, "categories:manage");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading]       = useState(true);
   const [showForm, setShowForm]     = useState(false);
@@ -265,17 +279,9 @@ function CategoriesContent() {
 
   useEffect(() => { load(); }, []);
 
-  // ── Owner-only guard ──────────────────────────────────────────────────────
-  if (adminProfile && adminProfile.role === "staff") {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
-        <p className="text-2xl">🔒</p>
-        <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
-        <p className="text-sm text-gray max-w-xs">
-          Category management is available to store owners only.
-        </p>
-      </div>
-    );
+  // ── Permission guard ──────────────────────────────────────────────────────
+  if (adminProfile && !hasPermission(role, "categories:view")) {
+    return <AccessDenied />;
   }
 
   // ── Handlers ─────────────────────────────────────────────────────────────
@@ -314,7 +320,7 @@ function CategoriesContent() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-serif text-2xl font-bold text-ink">Categories</h1>
-        {!showForm && !editingId && (
+        {canManage && !showForm && !editingId && (
           <button
             onClick={() => setShowForm(true)}
             className="bg-ink text-ivory text-sm font-medium px-5 py-2 rounded-full hover:bg-rose transition-colors"
@@ -390,6 +396,7 @@ function CategoriesContent() {
                   </div>
 
                   {/* Actions */}
+                  {canManage && (
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => setEditingId(cat.id)}
@@ -404,6 +411,7 @@ function CategoriesContent() {
                       Delete
                     </button>
                   </div>
+                  )}
                 </div>
               )}
             </div>

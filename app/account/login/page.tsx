@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+
+// Safe redirect — only allow relative same-origin paths
+function safeRedirect(raw: string | null, fallback: string): string {
+  if (!raw) return fallback;
+  if (raw.startsWith("/") && !raw.startsWith("//") && !/^\/[a-z]+:/i.test(raw)) {
+    return raw;
+  }
+  return fallback;
+}
 
 function friendlyError(code: string): string {
   switch (code) {
@@ -24,7 +33,9 @@ function friendlyError(code: string): string {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo   = safeRedirect(searchParams.get("redirect"), "/account");
 
   // Login form
   const [email, setEmail]           = useState("");
@@ -45,7 +56,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      router.push("/account");
+      router.push(redirectTo);
     } catch (err: unknown) {
       const code =
         err && typeof err === "object" && "code" in err
@@ -129,7 +140,10 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-gray mt-6">
           Don&apos;t have an account?{" "}
-          <Link href="/account/signup" className="text-rose hover:text-ink transition-colors">
+          <Link
+            href={`/account/signup${redirectTo !== "/account" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
+            className="text-rose hover:text-ink transition-colors"
+          >
             Sign up
           </Link>
         </p>

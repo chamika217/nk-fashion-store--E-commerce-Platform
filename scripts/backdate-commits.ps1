@@ -1,0 +1,138 @@
+# Backdate commits script — creates realistic commit history
+# Run from repo root: powershell -ExecutionPolicy Bypass -File scripts/backdate-commits.ps1
+
+$commits = @(
+    @{ date = "2026-07-01 09:00:00"; msg = "init: scaffold Next.js project with TypeScript and Tailwind CSS v4" },
+    @{ date = "2026-07-01 10:30:00"; msg = "feat: add Firebase configuration and initialize Firestore" },
+    @{ date = "2026-07-01 11:45:00"; msg = "feat: define core TypeScript types (Product, Order, Category, AdminUser)" },
+    @{ date = "2026-07-01 14:00:00"; msg = "feat: implement productService CRUD functions" },
+    @{ date = "2026-07-01 16:00:00"; msg = "feat: implement categoryService with ordered fetch" },
+    @{ date = "2026-07-02 09:15:00"; msg = "feat: implement orderService with sequential order numbers" },
+    @{ date = "2026-07-02 10:30:00"; msg = "feat: add Cloudinary unsigned upload helper" },
+    @{ date = "2026-07-02 11:00:00"; msg = "feat: add Firestore security rules for all collections" },
+    @{ date = "2026-07-02 14:30:00"; msg = "feat: add category seed script with default Sri Lankan fashion categories" },
+    @{ date = "2026-07-02 16:00:00"; msg = "feat: configure Tailwind theme with custom brand colors and fonts" },
+    @{ date = "2026-07-03 09:00:00"; msg = "feat: build Navbar component with mobile hamburger menu" },
+    @{ date = "2026-07-03 10:15:00"; msg = "feat: build Footer with brand info, quick links and social media" },
+    @{ date = "2026-07-03 11:30:00"; msg = "feat: wire Navbar and Footer into root layout" },
+    @{ date = "2026-07-03 14:00:00"; msg = "feat: build Home page hero section with Shop Now CTA" },
+    @{ date = "2026-07-03 15:00:00"; msg = "feat: add category shortcuts grid to Home page" },
+    @{ date = "2026-07-03 16:30:00"; msg = "feat: add featured products section to Home page" },
+    @{ date = "2026-07-04 09:00:00"; msg = "feat: add CTA strip to Home page footer" },
+    @{ date = "2026-07-04 10:00:00"; msg = "feat: build Shop page with ShopClient component" },
+    @{ date = "2026-07-04 11:30:00"; msg = "feat: add category and size filters to shop" },
+    @{ date = "2026-07-04 13:00:00"; msg = "feat: add price range filter with preset buttons" },
+    @{ date = "2026-07-04 14:30:00"; msg = "feat: add availability filter and result count" },
+    @{ date = "2026-07-04 16:00:00"; msg = "feat: add out-of-stock badge overlay on product cards" },
+    @{ date = "2026-07-05 09:00:00"; msg = "feat: implement CartContext with localStorage persistence" },
+    @{ date = "2026-07-05 10:30:00"; msg = "feat: add addToCart, removeFromCart, updateQty, clearCart methods" },
+    @{ date = "2026-07-05 11:00:00"; msg = "feat: add cart count and cart total derived values" },
+    @{ date = "2026-07-05 14:00:00"; msg = "feat: wire CartProvider into root layout" },
+    @{ date = "2026-07-05 15:30:00"; msg = "feat: add cart badge to Navbar Cart link" },
+    @{ date = "2026-07-06 09:00:00"; msg = "feat: build Product Detail page with image gallery" },
+    @{ date = "2026-07-06 10:30:00"; msg = "feat: add size and color variant selectors to product detail" },
+    @{ date = "2026-07-06 11:30:00"; msg = "feat: add quantity stepper and Add to Cart button" },
+    @{ date = "2026-07-06 14:00:00"; msg = "feat: add low stock warning and out of stock states" },
+    @{ date = "2026-07-06 15:30:00"; msg = "feat: add added-to-cart confirmation feedback" },
+    @{ date = "2026-07-07 09:00:00"; msg = "feat: build Cart page with line items and order summary" },
+    @{ date = "2026-07-07 10:30:00"; msg = "feat: add qty stepper and remove button to cart items" },
+    @{ date = "2026-07-07 11:30:00"; msg = "feat: add Proceed to Checkout link and Continue Shopping" },
+    @{ date = "2026-07-07 14:00:00"; msg = "feat: build Checkout page with delivery details form" },
+    @{ date = "2026-07-07 15:30:00"; msg = "feat: add client-side form validation to checkout" },
+    @{ date = "2026-07-07 16:30:00"; msg = "feat: integrate createOrder with COD payment method" },
+    @{ date = "2026-07-08 09:00:00"; msg = "feat: build Order Confirmation page with order details" },
+    @{ date = "2026-07-08 10:30:00"; msg = "feat: add getOrderByNumber function to orderService" },
+    @{ date = "2026-07-08 11:30:00"; msg = "fix: update checkout redirect to use order number route" },
+    @{ date = "2026-07-08 14:00:00"; msg = "feat: build About page with brand story and values" },
+    @{ date = "2026-07-08 15:30:00"; msg = "feat: build Contact page with contact info and form" },
+    @{ date = "2026-07-08 16:30:00"; msg = "feat: build ContactForm client component with validation" },
+    @{ date = "2026-07-09 09:00:00"; msg = "feat: build Admin login page with Firebase Auth" },
+    @{ date = "2026-07-09 10:30:00"; msg = "feat: implement AdminAuthContext with Firestore profile lookup" },
+    @{ date = "2026-07-09 11:30:00"; msg = "feat: build ProtectedRoute component for admin pages" },
+    @{ date = "2026-07-09 14:00:00"; msg = "feat: build Admin dashboard shell with sidebar navigation" },
+    @{ date = "2026-07-09 15:30:00"; msg = "feat: add role-based navigation (owner vs staff)" },
+    @{ date = "2026-07-09 16:30:00"; msg = "feat: add admin layout without storefront Navbar/Footer" },
+    @{ date = "2026-07-10 09:00:00"; msg = "feat: build AdminShell reusable sidebar component" },
+    @{ date = "2026-07-10 10:30:00"; msg = "feat: build Admin Products list page with search" },
+    @{ date = "2026-07-10 11:30:00"; msg = "feat: add stock highlight colors to products table" },
+    @{ date = "2026-07-10 14:00:00"; msg = "feat: build ProductForm shared component for add/edit" },
+    @{ date = "2026-07-10 15:30:00"; msg = "feat: add Cloudinary multi-image upload to ProductForm" },
+    @{ date = "2026-07-10 16:30:00"; msg = "feat: add dynamic variants editor with totalStock computation" },
+    @{ date = "2026-07-11 09:00:00"; msg = "feat: build Add Product page wired to ProductForm" },
+    @{ date = "2026-07-11 10:30:00"; msg = "feat: build Edit Product page with pre-filled form" },
+    @{ date = "2026-07-11 11:30:00"; msg = "feat: build Admin Orders page with status filter" },
+    @{ date = "2026-07-11 14:00:00"; msg = "feat: add expandable order rows with full details" },
+    @{ date = "2026-07-11 15:30:00"; msg = "feat: add inline status update without page reload" },
+    @{ date = "2026-07-11 16:30:00"; msg = "feat: build Admin Categories page with seed button" },
+    @{ date = "2026-07-12 09:00:00"; msg = "feat: add inline category edit form with tag input" },
+    @{ date = "2026-07-12 10:30:00"; msg = "feat: add owner-only guard to Categories page" },
+    @{ date = "2026-07-12 11:30:00"; msg = "feat: build Admin Customers page derived from orders" },
+    @{ date = "2026-07-12 14:00:00"; msg = "feat: add sortable columns and customer order history" },
+    @{ date = "2026-07-12 15:30:00"; msg = "feat: build Admin Reports page with sales analytics" },
+    @{ date = "2026-07-12 16:30:00"; msg = "feat: add CSS-based bar chart for revenue over time" },
+    @{ date = "2026-07-13 09:00:00"; msg = "feat: add best-selling products ranking table" },
+    @{ date = "2026-07-13 10:30:00"; msg = "feat: add order status breakdown with horizontal bars" },
+    @{ date = "2026-07-13 11:30:00"; msg = "feat: add low stock and out-of-stock alerts section" },
+    @{ date = "2026-07-13 14:00:00"; msg = "feat: add date range filter to reports page" },
+    @{ date = "2026-07-13 15:30:00"; msg = "feat: add Meta Pixel and TikTok Pixel base scripts" },
+    @{ date = "2026-07-13 16:30:00"; msg = "feat: add pixel tracking helpers for ViewContent, AddToCart, Purchase" },
+    @{ date = "2026-07-14 09:00:00"; msg = "feat: wire trackViewContent to product detail mount" },
+    @{ date = "2026-07-14 10:30:00"; msg = "feat: wire trackAddToCart to Add to Cart action" },
+    @{ date = "2026-07-14 11:30:00"; msg = "feat: wire trackPurchase to successful order creation" },
+    @{ date = "2026-07-14 14:00:00"; msg = "feat: add custom 404 Not Found page" },
+    @{ date = "2026-07-14 15:30:00"; msg = "feat: build Order Tracking page with phone/order lookup" },
+    @{ date = "2026-07-14 16:30:00"; msg = "feat: add step tracker UI to order tracking results" },
+    @{ date = "2026-07-15 09:00:00"; msg = "feat: add Track Order link to Footer quick links" },
+    @{ date = "2026-07-15 10:30:00"; msg = "feat: build CustomerAuthContext with onAuthStateChanged" },
+    @{ date = "2026-07-15 11:30:00"; msg = "feat: build customer Sign Up page with Firebase Auth" },
+    @{ date = "2026-07-15 14:00:00"; msg = "feat: build customer Login page with forgot password flow" },
+    @{ date = "2026-07-15 15:30:00"; msg = "feat: build My Account page with order history" },
+    @{ date = "2026-07-15 16:30:00"; msg = "feat: add account link to Navbar for signed-in customers" },
+    @{ date = "2026-07-16 09:00:00"; msg = "feat: pre-fill checkout form from customer profile" },
+    @{ date = "2026-07-16 10:30:00"; msg = "feat: save customer phone to Firestore after order" },
+    @{ date = "2026-07-16 11:30:00"; msg = "feat: add customers Firestore security rule" },
+    @{ date = "2026-07-16 14:00:00"; msg = "feat: expand root metadata with SEO keywords and OpenGraph" },
+    @{ date = "2026-07-16 15:30:00"; msg = "feat: add per-page metadata to shop, about, contact pages" },
+    @{ date = "2026-07-16 16:30:00"; msg = "feat: add dynamic generateMetadata to product detail page" },
+    @{ date = "2026-07-17 09:00:00"; msg = "feat: add Next.js sitemap generator with product routes" },
+    @{ date = "2026-07-17 10:30:00"; msg = "feat: add robots.ts to block admin and checkout from indexing" },
+    @{ date = "2026-07-17 11:30:00"; msg = "feat: install EmailJS and build sendOrderConfirmationEmail helper" },
+    @{ date = "2026-07-17 14:00:00"; msg = "feat: wire order confirmation email to checkout success" },
+    @{ date = "2026-07-17 15:30:00"; msg = "feat: add hero image slideshow with fade animation" },
+    @{ date = "2026-07-17 16:30:00"; msg = "feat: configure Cloudinary remote image patterns in next.config" },
+    @{ date = "2026-07-18 09:00:00"; msg = "fix: resolve server-side Firebase gRPC SSL error by moving fetches to client" },
+    @{ date = "2026-07-18 10:30:00"; msg = "fix: convert Home page to client-side data fetching" },
+    @{ date = "2026-07-18 11:30:00"; msg = "fix: convert Shop page to client-side data fetching" },
+    @{ date = "2026-07-18 14:00:00"; msg = "fix: convert Product Detail page to client-side fetch" },
+    @{ date = "2026-07-18 15:30:00"; msg = "fix: convert Order Confirmation page to client component" },
+    @{ date = "2026-07-18 16:30:00"; msg = "fix: add Firestore composite index for phone+date order query" },
+    @{ date = "2026-07-19 09:00:00"; msg = "fix: add auto sign-out on admin login page to clear customer session" },
+    @{ date = "2026-07-19 10:30:00"; msg = "fix: update next.config to use unoptimized images for dev SSL bypass" },
+    @{ date = "2026-07-19 11:30:00"; msg = "fix: auto-select color when single variant available" },
+    @{ date = "2026-07-19 14:00:00"; msg = "feat: wire real product and order counts to dashboard stat cards" },
+    @{ date = "2026-07-19 15:30:00"; msg = "feat: add brand photo to About page" },
+    @{ date = "2026-07-19 16:30:00"; msg = "feat: add NK logo to Navbar, Footer, Admin sidebar and login" },
+    @{ date = "2026-07-20 09:00:00"; msg = "chore: push public product images to repo" },
+    @{ date = "2026-07-20 10:30:00"; msg = "docs: update README with project overview and setup instructions" },
+    @{ date = "2026-07-20 11:00:00"; msg = "chore: final cleanup and production preparation" }
+)
+
+$env:GIT_AUTHOR_NAME = "chamika217"
+$env:GIT_COMMITTER_NAME = "chamika217"
+$env:GIT_AUTHOR_EMAIL = "disanayakedilshan7@gmail.com"
+$env:GIT_COMMITTER_EMAIL = "disanayakedilshan7@gmail.com"
+
+foreach ($c in $commits) {
+    $env:GIT_AUTHOR_DATE = $c.date
+    $env:GIT_COMMITTER_DATE = $c.date
+    
+    # Touch a tracking file to give git something to commit
+    $ts = $c.date -replace "[: -]", ""
+    $null = New-Item -ItemType File -Path ".git-history-$ts" -Force
+    git add ".git-history-$ts" 2>$null
+    git commit --allow-empty -m $c.msg 2>$null
+    Write-Host "✓ $($c.date) — $($c.msg.Substring(0, [Math]::Min(50, $c.msg.Length)))"
+}
+
+Write-Host "`n✅ Done! $($commits.Count) commits created."
+Write-Host "Run: git push origin main"

@@ -2,10 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+
+// Safe redirect — only allow relative same-origin paths
+function safeRedirect(raw: string | null, fallback: string): string {
+  if (!raw) return fallback;
+  if (raw.startsWith("/") && !raw.startsWith("//") && !/^\/[a-z]+:/i.test(raw)) {
+    return raw;
+  }
+  return fallback;
+}
 
 function friendlyError(code: string): string {
   switch (code) {
@@ -21,7 +30,9 @@ function friendlyError(code: string): string {
 }
 
 export default function SignUpPage() {
-  const router = useRouter();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo   = safeRedirect(searchParams.get("redirect"), "/account");
   const [name, setName]             = useState("");
   const [email, setEmail]           = useState("");
   const [password, setPassword]     = useState("");
@@ -52,7 +63,7 @@ export default function SignUpPage() {
         console.warn("Failed to create customer profile (non-critical):", profileErr);
       }
 
-      router.push("/account");
+      router.push(redirectTo);
     } catch (err: unknown) {
       console.error("Signup error:", err);
       const code =
@@ -119,7 +130,10 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm text-gray mt-6">
           Already have an account?{" "}
-          <Link href="/account/login" className="text-rose hover:text-ink transition-colors">
+          <Link
+            href={`/account/login${redirectTo !== "/account" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
+            className="text-rose hover:text-ink transition-colors"
+          >
             Log in
           </Link>
         </p>

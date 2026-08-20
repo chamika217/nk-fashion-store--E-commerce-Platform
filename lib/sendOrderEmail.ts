@@ -16,7 +16,15 @@ const PUBLIC_KEY  = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY  ?? "";
  */
 export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   // Skip silently if no recipient address
-  if (!order.customer.email?.trim()) return;
+  if (!order.customer.email?.trim()) {
+    console.log("[EmailJS] Skipped — no customer email address");
+    return;
+  }
+
+  console.log("[EmailJS] Sending to:", order.customer.email, "Order:", order.orderNumber);
+  console.log("[EmailJS] SERVICE_ID:", SERVICE_ID ? "✅ set" : "❌ missing");
+  console.log("[EmailJS] TEMPLATE_ID:", TEMPLATE_ID ? "✅ set" : "❌ missing");
+  console.log("[EmailJS] PUBLIC_KEY:", PUBLIC_KEY ? "✅ set" : "❌ missing");
 
   // OrderItem does not carry an image URL — leave image_url as empty string.
   // If the type is extended with images in future, replace "" with item.imageUrl.
@@ -36,9 +44,14 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   };
 
   try {
-    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, {
+      publicKey: PUBLIC_KEY,
+    });
   } catch (err) {
     // Log a warning but never propagate — email failure must not affect order flow
     console.warn("[EmailJS] Order confirmation email failed:", err);
+    if (err && typeof err === "object" && "text" in err) {
+      console.warn("[EmailJS] Error detail:", (err as { text: string }).text);
+    }
   }
 }

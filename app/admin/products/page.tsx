@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getProducts, deleteProduct } from "@/lib/productService";
 import type { Product } from "@/lib/types";
 import AdminShell from "@/components/admin/AdminShell";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+import { hasPermission } from "@/lib/permissions";
 
 // ── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: Product["status"] }) {
@@ -29,7 +31,22 @@ function StatusBadge({ status }: { status: Product["status"] }) {
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
+
+function AccessDenied() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+      <p className="text-2xl">🔒</p>
+      <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
+      <p className="text-sm text-gray max-w-xs">
+        You don&apos;t have permission to access this section.
+      </p>
+    </div>
+  );
+}
+
 function ProductListContent() {
+  const { adminProfile, role }  = useAdminAuth();
+  const canManage               = hasPermission(role, "products:manage");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState("");
@@ -45,6 +62,11 @@ function ProductListContent() {
   }
 
   useEffect(() => { load(); }, []);
+
+  // ── Permission guard ────────────────────────────────────────────────────
+  if (adminProfile && !hasPermission(role, "products:view")) {
+    return <AccessDenied />;
+  }
 
   async function handleDelete(product: Product) {
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
@@ -67,12 +89,14 @@ function ProductListContent() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h1 className="font-serif text-2xl font-bold text-ink">Products</h1>
+        {canManage && (
         <Link
           href="/admin/products/new"
           className="bg-ink text-ivory text-sm font-medium px-5 py-2 rounded-full hover:bg-rose transition-colors"
         >
           + Add Product
         </Link>
+        )}
       </div>
 
       {/* Search */}
@@ -89,12 +113,14 @@ function ProductListContent() {
       ) : products.length === 0 ? (
         <div className="text-center py-20 flex flex-col items-center gap-3">
           <p className="text-gray">No products yet.</p>
+          {canManage && (
           <Link
             href="/admin/products/new"
             className="text-sm text-rose underline underline-offset-2 hover:text-ink transition-colors"
           >
             Add your first product
           </Link>
+          )}
         </div>
       ) : (
         <>
@@ -167,6 +193,7 @@ function ProductListContent() {
                         <StatusBadge status={product.status} />
                       </td>
                       <td className="px-4 py-3 text-right">
+                        {canManage && (
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/products/${product.id}/edit`}
@@ -181,6 +208,7 @@ function ProductListContent() {
                             Delete
                           </button>
                         </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -231,6 +259,8 @@ function ProductListContent() {
                       <StatusBadge status={product.status} />
                     </div>
                     <div className="flex gap-2 mt-2">
+                      {canManage && (
+                      <>
                       <Link
                         href={`/admin/products/${product.id}/edit`}
                         className="text-xs text-ink border border-gray-light rounded-full px-3 py-1 hover:border-rose hover:text-rose transition-colors"
@@ -243,6 +273,8 @@ function ProductListContent() {
                       >
                         Delete
                       </button>
+                      </>
+                      )}
                     </div>
                   </div>
                 </div>

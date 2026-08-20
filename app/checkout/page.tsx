@@ -9,6 +9,7 @@ import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { createOrder } from "@/lib/orderService";
 import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
 import { trackPurchase } from "@/lib/pixels";
+import { getStoreSettings } from "@/lib/settingsService";
 
 // TODO: Replace with a value fetched from the "settings" collection in Firestore
 // once an admin settings page is built.
@@ -47,6 +48,7 @@ export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useCustomerAuth();
 
+  const [deliveryFee, setDeliveryFee] = useState(350);
   const [form, setForm] = useState<FormState>({
     name: "",
     phone: "",
@@ -57,6 +59,11 @@ export default function CheckoutPage() {
   const [errors, setErrors]       = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  // Load delivery fee from Firestore settings
+  useEffect(() => {
+    getStoreSettings().then((s) => setDeliveryFee(s.deliveryFee)).catch(() => {});
+  }, []);
 
   // Redirect to cart if empty (runs after hydration)
   useEffect(() => {
@@ -153,7 +160,7 @@ export default function CheckoutPage() {
 
       // Fire-and-forget confirmation email — helper catches its own errors,
       // so a slow/failed send never blocks the redirect.
-      sendOrderConfirmationEmail({ ...orderData, id: "", orderNumber });
+      sendOrderConfirmationEmail({ ...orderData, id: "", orderNumber }).catch(() => {});
 
       // If customer is logged in, save their phone to profile for order history lookup.
       // Guest checkout is unaffected — this block is skipped entirely for guests.

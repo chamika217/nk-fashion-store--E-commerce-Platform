@@ -2,7 +2,10 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { trackViewContent, trackAddToCart } from "@/lib/pixels";
 import type { Product } from "@/lib/types";
 
@@ -12,6 +15,8 @@ interface ProductDetailViewProps {
 
 export default function ProductDetailView({ product }: ProductDetailViewProps) {
   const { addToCart } = useCart();
+  const { user, loading: authLoading } = useCustomerAuth();
+  const router = useRouter();
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -96,6 +101,13 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
   function handleAddToCart() {
     if (!canAddToCart || !selectedVariant) return;
+
+    // Require login to add to cart
+    if (!user) {
+      router.push(`/account/login?redirect=/product/${product.id}`);
+      return;
+    }
+
     addToCart({
       productId: product.id,
       name: product.name,
@@ -289,7 +301,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
             {/* Add to Cart button */}
             <button
               onClick={handleAddToCart}
-              disabled={!canAddToCart}
+              disabled={!canAddToCart || authLoading}
               className={`mt-2 w-full sm:w-auto sm:px-12 py-3 rounded-full text-sm font-medium transition-colors duration-200 ${
                 canAddToCart
                   ? added
@@ -298,7 +310,11 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                   : "bg-gray-light text-gray cursor-not-allowed"
               }`}
             >
-              {added ? "Added to Cart ✓" : "Add to Cart"}
+              {added
+                ? "Added to Cart ✓"
+                : !user && canAddToCart
+                ? "Login to Add to Cart"
+                : "Add to Cart"}
             </button>
 
             {/* Metadata */}

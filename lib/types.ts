@@ -68,6 +68,27 @@ export interface Category {
 export interface AdminUser {
   uid: string;
   name: string;
-  role: "owner" | "staff";
   email: string;
+  // roleId references a Role document in the roles/{roleId} Firestore collection.
+  // NOTE: Existing admins/{uid} docs still have the old role:"owner"|"staff" field.
+  // After deploying this change, update each admin's Firestore doc manually via
+  // Firebase Console to add roleId pointing to the appropriate seeded role ID.
+  roleId: string;
+}
+
+// ── RBAC ─────────────────────────────────────────────────────────────────────
+
+export type Permission =
+  | "products:view"   | "products:manage"
+  | "orders:view"     | "orders:manage"
+  | "categories:view" | "categories:manage"
+  | "customers:view"
+  | "content:view"    | "content:manage"
+  | "reports:view"
+  | "users:manage"; // manage admin accounts and roles (Super Admin only)
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: Permission[];
 }

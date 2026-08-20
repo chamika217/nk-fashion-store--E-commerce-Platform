@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { getOrders, updateOrderStatus } from "@/lib/orderService";
 import type { Order } from "@/lib/types";
 import AdminShell from "@/components/admin/AdminShell";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+import { hasPermission } from "@/lib/permissions";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -38,9 +40,11 @@ function StatusBadge({ status }: { status: Order["status"] }) {
 
 function OrderDetail({
   order,
+  canManage,
   onStatusChange,
 }: {
   order: Order;
+  canManage: boolean;
   onStatusChange: (id: string, status: Order["status"]) => void;
 }) {
   const [saving, setSaving]     = useState(false);
@@ -119,19 +123,25 @@ function OrderDetail({
           {/* Status change */}
           <div>
             <p className="text-xs font-semibold text-ink uppercase tracking-wider mb-2">Update Status</p>
-            <select
-              value={order.status}
-              onChange={handleStatus}
-              disabled={saving}
-              className={inp}
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            {saved   && <p className="text-xs text-green-600 mt-1">Status updated ✓</p>}
-            {saveErr && <p className="text-xs text-rose mt-1">{saveErr}</p>}
-            {saving  && <p className="text-xs text-gray mt-1 animate-pulse">Saving…</p>}
+            {canManage ? (
+              <>
+                <select
+                  value={order.status}
+                  onChange={handleStatus}
+                  disabled={saving}
+                  className={inp}
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                {saved   && <p className="text-xs text-green-600 mt-1">Status updated ✓</p>}
+                {saveErr && <p className="text-xs text-rose mt-1">{saveErr}</p>}
+                {saving  && <p className="text-xs text-gray mt-1 animate-pulse">Saving…</p>}
+              </>
+            ) : (
+              <StatusBadge status={order.status} />
+            )}
           </div>
         </div>
       </div>
@@ -141,7 +151,21 @@ function OrderDetail({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+function AccessDenied() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+      <p className="text-2xl">🔒</p>
+      <p className="font-serif text-xl font-bold text-ink">Access Restricted</p>
+      <p className="text-sm text-gray max-w-xs">
+        You don&apos;t have permission to access this section.
+      </p>
+    </div>
+  );
+}
+
 function OrdersContent() {
+  const { adminProfile, role }    = useAdminAuth();
+  const canManage                 = hasPermission(role, "orders:manage");
   const [orders, setOrders]       = useState<Order[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
@@ -153,6 +177,11 @@ function OrdersContent() {
       .then(setOrders)
       .finally(() => setLoading(false));
   }, []);
+
+  // ── Permission guard ────────────────────────────────────────────────────
+  if (adminProfile && !hasPermission(role, "orders:view")) {
+    return <AccessDenied />;
+  }
 
   function handleStatusChange(id: string, status: Order["status"]) {
     setOrders((prev) =>
@@ -280,6 +309,7 @@ function OrdersContent() {
                   {expanded === order.id && (
                     <OrderDetail
                       order={order}
+                      canManage={canManage}
                       onStatusChange={handleStatusChange}
                     />
                   )}

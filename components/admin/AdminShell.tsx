@@ -7,22 +7,22 @@ import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { hasPermission } from "@/lib/permissions";
+import type { Permission } from "@/lib/types";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 
-const OWNER_LINKS = [
+// Each nav link declares the permission needed to see it.
+// undefined = always visible (Dashboard).
+const ALL_NAV_LINKS: { label: string; href: string; permission?: Permission }[] = [
   { label: "Dashboard",  href: "/admin/dashboard"  },
-  { label: "Products",   href: "/admin/products"   },
-  { label: "Categories", href: "/admin/categories" },
-  { label: "Orders",     href: "/admin/orders"     },
-  { label: "Customers",  href: "/admin/customers"  },
-  { label: "Reports",    href: "/admin/reports"    },
-  { label: "Settings",   href: "/admin/settings"   },
-];
-
-const STAFF_LINKS = [
-  { label: "Dashboard", href: "/admin/dashboard" },
-  { label: "Products",  href: "/admin/products"  },
-  { label: "Orders",    href: "/admin/orders"    },
+  { label: "Products",   href: "/admin/products",   permission: "products:view"   },
+  { label: "Categories", href: "/admin/categories", permission: "categories:view" },
+  { label: "Orders",     href: "/admin/orders",     permission: "orders:view"     },
+  { label: "Customers",  href: "/admin/customers",  permission: "customers:view"  },
+  { label: "Content",    href: "/admin/content",    permission: "content:view"    },
+  { label: "Reports",    href: "/admin/reports",    permission: "reports:view"    },
+  { label: "Users",      href: "/admin/users",      permission: "users:manage"    },
+  { label: "Settings",   href: "/admin/settings"  },
 ];
 
 interface AdminShellProps {
@@ -32,9 +32,12 @@ interface AdminShellProps {
 function Shell({ children }: AdminShellProps) {
   const router   = useRouter();
   const pathname = usePathname();
-  const { adminProfile } = useAdminAuth();
+  const { adminProfile, role } = useAdminAuth();
 
-  const navLinks = adminProfile?.role === "staff" ? STAFF_LINKS : OWNER_LINKS;
+  // Show a link if it has no permission requirement OR the current role has it
+  const navLinks = ALL_NAV_LINKS.filter(
+    (l) => !l.permission || hasPermission(role, l.permission)
+  );
 
   async function handleLogout() {
     await signOut(auth);
@@ -52,6 +55,7 @@ function Shell({ children }: AdminShellProps) {
             alt="NK Fashion Store"
             width={40}
             height={40}
+            style={{ width: 40, height: 40 }}
             className="rounded-full object-cover shrink-0"
           />
           <div>
@@ -67,7 +71,8 @@ function Shell({ children }: AdminShellProps) {
         {/* Nav links */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
           {navLinks.map((link) => {
-            const active = pathname === link.href || pathname.startsWith(link.href + "/");
+            const active =
+              pathname === link.href || pathname.startsWith(link.href + "/");
             return (
               <Link
                 key={link.href}
@@ -91,12 +96,12 @@ function Shell({ children }: AdminShellProps) {
               <p className="text-sm font-medium text-ivory leading-snug truncate">
                 {adminProfile.name}
               </p>
-              <p className="text-xs text-white/40 truncate">
-                {adminProfile.email}
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-white/30 mt-0.5">
-                {adminProfile.role}
-              </p>
+              <p className="text-xs text-white/40 truncate">{adminProfile.email}</p>
+              {role && (
+                <p className="text-[10px] uppercase tracking-widest text-white/30 mt-0.5">
+                  {role.name}
+                </p>
+              )}
             </div>
           )}
           <button

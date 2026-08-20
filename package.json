@@ -11,7 +11,7 @@
   "dependencies": {
     "@emailjs/browser": "4.4.1",
     "firebase": "^12.17.1",
-    "framer-motion": "^13.1.0",
+    "framer-motion": "13.1.0",
     "lucide-react": "^1.32.0",
     "next": "16.3.0",
     "react": "19.2.8",
