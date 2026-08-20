@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 
 // ── Image pools per slot ──────────────────────────────────────────────────────
 const SLOT_IMAGES: string[][] = [
@@ -128,19 +128,19 @@ export default function AnimatedHero() {
   const reduce            = useReducedMotion() ?? false;
   const [paused, setPaused] = useState(false);
 
-  const container = {
+  const container: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.15 } },
   };
   
-  const fadeUp = {
+  const fadeUp: Variants = {
     hidden: { opacity: 0, y: reduce ? 0 : 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.215, 0.61, 0.355, 1] } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.215, 0.61, 0.355, 1] as [number, number, number, number] } },
   };
   
-  const badgeVariant = {
+  const badgeVariant: Variants = {
     hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" as const } },
   };
 
   return (

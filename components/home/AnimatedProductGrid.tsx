@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/types";
@@ -13,17 +13,17 @@ interface AnimatedProductGridProps {
 export default function AnimatedProductGrid({ products, loading }: AnimatedProductGridProps) {
   const reduce = useReducedMotion();
 
-  const container = {
+  const container: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.08 } },
   };
 
-  const card = {
+  const card: Variants = {
     hidden: { opacity: 0, y: reduce ? 0 : 25 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.55, ease: "easeOut" },
+      transition: { duration: 0.55, ease: "easeOut" as const },
     },
   };
 

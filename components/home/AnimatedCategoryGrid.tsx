@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import type { Category } from "@/lib/types";
@@ -28,17 +28,17 @@ const getCategoryImage = (name: string, slug?: string) => {
 export default function AnimatedCategoryGrid({ categories }: AnimatedCategoryGridProps) {
   const reduce = useReducedMotion();
 
-  const container = {
+  const container: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.1 } },
   };
 
-  const card = {
+  const card: Variants = {
     hidden: { opacity: 0, y: reduce ? 0 : 25 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.55, ease: "easeOut" },
+      transition: { duration: 0.55, ease: "easeOut" as const },
     },
   };
 

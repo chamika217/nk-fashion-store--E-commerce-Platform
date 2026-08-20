@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 const VALUES = [
   {
@@ -36,17 +36,17 @@ const VALUES = [
 export default function BrandPhilosophy() {
   const reduce = useReducedMotion();
 
-  const container = {
+  const container: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.12 } },
   };
 
-  const itemVariant = {
+  const itemVariant: Variants = {
     hidden: { opacity: 0, y: reduce ? 0 : 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.55, ease: "easeOut" },
+      transition: { duration: 0.55, ease: "easeOut" as const },
     },
   };
 
