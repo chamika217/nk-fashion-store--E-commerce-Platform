@@ -102,12 +102,9 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
   function handleAddToCart() {
     if (!canAddToCart || !selectedVariant) return;
 
-    // Require login to add to cart
-    if (!user) {
-      router.push(`/account/login?redirect=/product/${product.id}`);
-      return;
-    }
-
+    // Login is NOT required to add to cart.
+    // Login is only required at checkout stage.
+    // (Guest cart is stored in localStorage via CartContext.)
     addToCart({
       productId: product.id,
       name: product.name,
@@ -310,11 +307,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                   : "bg-gray-light text-gray cursor-not-allowed"
               }`}
             >
-              {added
-                ? "Added to Cart ✓"
-                : !user && canAddToCart
-                ? "Login to Add to Cart"
-                : "Add to Cart"}
+              {added ? "Added to Cart ✓" : "Add to Cart"}
             </button>
 
             {/* Metadata */}

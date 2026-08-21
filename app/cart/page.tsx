@@ -3,48 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
-// NOTE: Guest checkout was intentionally removed. Adding to cart and viewing
-// the cart now requires a signed-in customer account. Do not revert this
-// without a deliberate product decision to re-allow guest checkout.
+// NOTE: Cart is open to guests. Login is only required at checkout.
+// Guest cart is stored in localStorage via CartContext.
 
 export default function CartPage() {
   const { cartItems, cartTotal, updateQty, removeFromCart } = useCart();
-  const { user, loading } = useCustomerAuth();
-
-  // While auth is resolving, avoid flash
-  if (loading) {
-    return (
-      <main className="flex-1 bg-ivory flex items-center justify-center py-24">
-        <p className="text-sm text-gray animate-pulse">Loading…</p>
-      </main>
-    );
-  }
-
-  // Not signed in — show login prompt (defense in depth)
-  if (!user) {
-    return (
-      <main className="flex-1 bg-ivory flex flex-col items-center justify-center gap-5 px-4 py-24 text-center">
-        <h1 className="font-serif text-3xl font-bold text-ink">Your Cart</h1>
-        <p className="text-gray text-sm max-w-xs">
-          Please log in to view your cart and proceed to checkout.
-        </p>
-        <Link
-          href="/account/login?redirect=/cart"
-          className="bg-ink text-ivory text-sm font-medium px-8 py-3 rounded-full hover:bg-rose transition-colors duration-200"
-        >
-          Log In
-        </Link>
-        <Link
-          href="/account/signup?redirect=/cart"
-          className="text-xs text-gray hover:text-rose transition-colors"
-        >
-          Don&apos;t have an account? Sign up
-        </Link>
-      </main>
-    );
-  }
 
   // ── Empty state ───────────────────────────────────────────────────────────
   if (cartItems.length === 0) {
