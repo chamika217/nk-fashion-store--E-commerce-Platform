@@ -46,7 +46,7 @@ function validate(form: FormState): FormErrors {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { user } = useCustomerAuth();
+  const { user, loading: authLoading } = useCustomerAuth();
 
   const [deliveryFee, setDeliveryFee] = useState(350);
   const [form, setForm] = useState<FormState>({
@@ -72,6 +72,13 @@ export default function CheckoutPage() {
     }
   }, [cartItems.length, router]);
 
+  // Redirect to login if user is not authenticated after auth resolves
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/account/login?redirect=/checkout");
+    }
+  }, [authLoading, user, router]);
+
   // Pre-fill form from logged-in customer profile (convenience only — form stays editable)
   useEffect(() => {
     if (!user) return;
@@ -91,6 +98,9 @@ export default function CheckoutPage() {
 
   // Don't render until we know cart has items (avoids flash)
   if (cartItems.length === 0) return null;
+
+  // Don't render while auth is resolving (avoids flash before redirect)
+  if (authLoading || !user) return null;
 
   const subtotal = cartTotal;
   const total = subtotal + DELIVERY_FEE;

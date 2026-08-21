@@ -1,5 +1,11 @@
 "use client";
 
+// Admin Setup Requirements:
+// 1. Create admin user in Firebase Console → Authentication → Add user
+// 2. In Firestore → admins/{uid} doc: { name, email, roleId }
+// 3. In Firestore → roles/{roleId} doc: { name: "Super Admin", permissions: [...] }
+// Seed roles via /admin/users page → "Seed Default Roles" button
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
