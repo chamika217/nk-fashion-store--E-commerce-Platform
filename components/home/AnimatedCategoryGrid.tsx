@@ -12,8 +12,8 @@ interface AnimatedCategoryGridProps {
 const CATEGORY_IMAGES: Record<string, string> = {
   "womens-wear": "/images/hero/animation3.jpg",
   "mens-wear": "/images/hero/animation2.jpg",
-  "kids-wear": "/images/hero/animation1.jpg",
-  "accessories": "/images/hero/animation4.jpg",
+  "kids-wear": "/images/hero/animation4.jpg",
+  "accessories": "/images/hero/animation1.jpg",
 };
 
 const getCategoryImage = (name: string, slug?: string) => {
