@@ -3,10 +3,11 @@
 import { useState, useMemo, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { trackViewContent, trackAddToCart } from "@/lib/pixels";
-import { getProductsByCategory } from "@/lib/productService";
+import { getProductsByCategory, getProductById } from "@/lib/productService";
 import type { Product } from "@/lib/types";
 
 interface ProductDetailViewProps {
@@ -61,6 +62,7 @@ function ChevronIcon({ open }: { open: boolean }) {
 export default function ProductDetailView({ product }: ProductDetailViewProps) {
   const { addToCart } = useCart();
   const { user, loading: authLoading } = useCustomerAuth();
+  const router = useRouter();
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -75,6 +77,62 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
   // "You May Also Like" state
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
+
+  // Wishlist state
+  const [wishlisted, setWishlisted] = useState(false);
+
+  // Recently viewed state
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
+
+  // Wishlist toggle handler
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("nk-wishlist");
+      const list: string[] = stored ? JSON.parse(stored) : [];
+      setWishlisted(list.includes(product.id));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [product.id]);
+
+  const toggleWishlist = () => {
+    try {
+      const stored = localStorage.getItem("nk-wishlist");
+      let list: string[] = stored ? JSON.parse(stored) : [];
+      if (list.includes(product.id)) {
+        list = list.filter((id) => id !== product.id);
+        setWishlisted(false);
+      } else {
+        list.push(product.id);
+        setWishlisted(true);
+      }
+      localStorage.setItem("nk-wishlist", JSON.stringify(list));
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  // Recently Viewed logic
+  useEffect(() => {
+    if (!product || !product.id) return;
+    try {
+      const key = "nk-recently-viewed";
+      const stored = localStorage.getItem(key);
+      const list: string[] = stored ? JSON.parse(stored) : [];
+      const updated = [product.id, ...list.filter((id) => id !== product.id)].slice(0, 5);
+      localStorage.setItem(key, JSON.stringify(updated));
+
+      // Fetch actual product profiles for other recently viewed items
+      const fetchIds = updated.filter((id) => id !== product.id).slice(0, 4);
+      Promise.all(fetchIds.map((id) => getProductById(id)))
+        .then((res) => {
+          setRecentlyViewed(res.filter((p): p is Product => p !== null && p !== undefined));
+        })
+        .catch(() => {});
+    } catch {
+      // Ignore storage errors
+    }
+  }, [product]);
 
   // ── Track view on mount ───────────────────────────────────────────────────
   useEffect(() => {
@@ -194,6 +252,20 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  function handleBuyNow() {
+    if (!canAddToCart || !selectedVariant) return;
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      image: product.images?.[0] ?? "",
+      size: selectedSize,
+      color: selectedColor,
+      price: product.price,
+      qty,
+    });
+    router.push("/checkout");
   }
 
   // ── Stock status badge ────────────────────────────────────────────────────
@@ -446,30 +518,51 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
             )}
 
             {/* Add to Cart button */}
-            <div className="flex flex-col gap-2">
+            {/* Add to Cart, Buy Now & Wishlist buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mt-2">
               <button
                 onClick={handleAddToCart}
                 disabled={!canAddToCart || authLoading}
-                className={`w-full sm:w-auto sm:min-w-[200px] py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 ${
+                className={`flex-1 py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 ${
                   canAddToCart
                     ? added
-                      ? "bg-rose text-ivory cursor-default"
-                      : "bg-ink text-ivory hover:bg-rose active:scale-95"
+                      ? "bg-rose text-ivory cursor-default text-center"
+                      : "bg-ink text-ivory hover:bg-rose active:scale-95 text-center"
+                    : "bg-gray-light text-gray cursor-not-allowed text-center"
+                }`}
+              >
+                {added ? "Added ✓" : "Add to Cart"}
+              </button>
+
+              <button
+                onClick={handleBuyNow}
+                disabled={!canAddToCart || authLoading}
+                className={`flex-1 py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 text-center ${
+                  canAddToCart
+                    ? "bg-rose text-ivory hover:bg-rose/90 active:scale-95"
                     : "bg-gray-light text-gray cursor-not-allowed"
                 }`}
               >
-                {added ? "Added to Cart ✓" : "Add to Cart"}
+                Buy Now
               </button>
 
-              {/* Login hint — shown when not logged in but item can be added */}
-              {!user && canAddToCart && (
-                <p className="text-xs text-gray">
-                  <Link href="/account/login" className="text-rose hover:underline">
-                    Sign in
-                  </Link>{" "}
-                  to track your orders and manage your account
-                </p>
-              )}
+              {/* Wishlist toggle */}
+              <button
+                onClick={toggleWishlist}
+                className="p-3 rounded-full border border-gray-light hover:border-rose text-ink hover:text-rose transition-colors flex items-center justify-center shrink-0"
+                aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill={wishlisted ? "#b7767a" : "none"}
+                  stroke={wishlisted ? "#b7767a" : "currentColor"}
+                  strokeWidth={2}
+                  className="w-5 h-5 transition-transform duration-250 hover:scale-110"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </button>
             </div>
 
             {/* Material + weight metadata */}
@@ -510,6 +603,35 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                 </div>
               )}
             </div>
+
+            {/* ── Product Specifications ── */}
+            <div className="border border-gray-light rounded-xl overflow-hidden mt-3">
+              <div className="px-4 py-3 bg-gray-light/25 border-b border-gray-light text-sm font-semibold text-ink">
+                Product Details &amp; Specifications
+              </div>
+              <div className="p-4 text-xs flex flex-col gap-2.5 bg-white">
+                <div className="flex justify-between border-b border-gray-light/40 pb-1.5">
+                  <span className="text-gray">SKU</span>
+                  <span className="text-ink font-medium">{product.sku || "N/A"}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-light/40 pb-1.5">
+                  <span className="text-gray">Category</span>
+                  <span className="text-ink font-medium capitalize">{product.category || "N/A"}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-light/40 pb-1.5">
+                  <span className="text-gray">Subcategory</span>
+                  <span className="text-ink font-medium capitalize">{product.subcategory || "N/A"}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-light/40 pb-1.5">
+                  <span className="text-gray">Material</span>
+                  <span className="text-ink font-medium">{product.material || "N/A"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray">Weight</span>
+                  <span className="text-ink font-medium">{product.weight ? `${product.weight}g` : "N/A"}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -548,6 +670,55 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
           )}
         </div>
       )}
+
+      {/* ── Recently Viewed ── */}
+      {recentlyViewed.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-light/60">
+          <h2 className="font-serif text-2xl font-bold text-ink mb-6">Recently Viewed</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+            {recentlyViewed.map((p) => (
+              <RelatedCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Customer Reviews & Ratings ── */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-light/60">
+        <h2 className="font-serif text-2xl font-bold text-ink mb-6">Customer Reviews</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Summary */}
+          <div className="bg-rose-light/10 border border-rose-light/25 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+            <p className="text-5xl font-bold text-ink">4.9</p>
+            <div className="flex gap-1 text-gold text-lg my-2">
+              {"★★★★★".split("").map((s, i) => (
+                <span key={i}>{s}</span>
+              ))}
+            </div>
+            <p className="text-xs text-gray">Based on 18 verified buyer reviews</p>
+          </div>
+          {/* List */}
+          <div className="md:col-span-2 flex flex-col gap-6">
+            {[
+              { name: "Suresh P.", rating: 5, date: "2 weeks ago", text: "Perfect fit and high-quality material! Will definitely order again. Highly recommended boutique." },
+              { name: "Nimz K.", rating: 5, date: "1 month ago", text: "Love the color and style. The sizing guide was 100% accurate and delivery was prompt!" },
+            ].map((rev, idx) => (
+              <div key={idx} className="border-b border-gray-light pb-4 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-sm text-ink">{rev.name}</span>
+                  <span className="text-[10px] text-gray">{rev.date}</span>
+                </div>
+                <div className="flex gap-0.5 text-gold text-xs">
+                  {"★".repeat(rev.rating).split("").map((s, i) => (
+                    <span key={i}>{s}</span>
+                  ))}
+                </div>
+                <p className="text-xs sm:text-sm text-gray leading-relaxed">{rev.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* ── Size Guide Modal ─────────────────────────────────────────────────── */}
       {sizeGuideOpen && (

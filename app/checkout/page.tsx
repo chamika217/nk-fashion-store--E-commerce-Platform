@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
@@ -72,13 +73,6 @@ export default function CheckoutPage() {
     }
   }, [cartItems.length, router]);
 
-  // Redirect to login if user is not authenticated after auth resolves
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/account/login?redirect=/checkout");
-    }
-  }, [authLoading, user, router]);
-
   // Pre-fill form from logged-in customer profile (convenience only — form stays editable)
   useEffect(() => {
     if (!user) return;
@@ -99,8 +93,14 @@ export default function CheckoutPage() {
   // Don't render until we know cart has items (avoids flash)
   if (cartItems.length === 0) return null;
 
-  // Don't render while auth is resolving (avoids flash before redirect)
-  if (authLoading || !user) return null;
+  // Don't render while auth is resolving
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-ivory flex items-center justify-center text-sm text-gray">
+        Loading…
+      </div>
+    );
+  }
 
   const subtotal = cartTotal;
   const total = subtotal + DELIVERY_FEE;
@@ -212,6 +212,15 @@ export default function CheckoutPage() {
               <h2 className="font-serif text-xl font-bold text-ink">
                 Delivery Details
               </h2>
+
+              {!user && (
+                <div className="bg-rose-light/25 border border-rose-light/50 rounded-xl p-4 text-xs sm:text-sm text-ink">
+                  <span className="font-semibold text-rose">Returning Customer? </span>
+                  <Link href="/account/login?redirect=/checkout" className="underline font-semibold hover:text-rose transition-colors">
+                    Log in here
+                  </Link> for a faster checkout with auto-filled profile info.
+                </div>
+              )}
 
               {/* Full Name */}
               <div className="flex flex-col gap-1">

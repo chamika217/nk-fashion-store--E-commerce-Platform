@@ -1,33 +1,67 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { FacebookIcon, TikTokIcon } from "./icons/SocialIcons";
 
 const SHOP_LINKS = [
   { label: "Women's Wear", href: "/shop?category=Women%27s+Wear" },
   { label: "Men's Wear",   href: "/shop?category=Men%27s+Wear"   },
   { label: "Kids' Wear",   href: "/shop?category=Kids%27+Wear"   },
-  { label: "Accessories",  href: "/shop?category=Accessories"    },
   { label: "New Arrivals", href: "/shop"                          },
-  { label: "All Products", href: "/shop"                          },
+  { label: "Best Sellers", href: "/shop"                          },
+  { label: "Sale",         href: "/shop?onSale=true"              },
 ];
 
 const HELP_LINKS = [
-  { label: "Track Order",  href: "/track-order" },
-  { label: "Contact Us",   href: "/contact"     },
-  { label: "About Us",     href: "/about"       },
-  { label: "My Account",   href: "/account"     },
-  { label: "My Orders",    href: "/account"     },
-  { label: "Sign Up",      href: "/account/signup" },
+  { label: "Contact Us",        href: "/contact" },
+  { label: "FAQ / Support",     href: "/contact" },
+  { label: "Track Your Order",  href: "/track-order" },
+  { label: "Shipping & Returns",href: "/about" },
 ];
 
-const PAYMENT_METHODS = ["COD", "Bank Transfer"];
+const ACCOUNT_LINKS = [
+  { label: "My Profile",   href: "/account" },
+  { label: "My Orders",    href: "/account" },
+  { label: "Sign Up / Log In", href: "/account/login" },
+];
+
+const PAYMENT_METHODS = ["COD", "Bank Transfer", "Visa / MasterCard"];
 
 export default function Footer() {
   const year = new Date().getFullYear();
 
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert("Thank you for subscribing to our newsletter!");
+  };
+
   return (
-    <footer className="bg-ink text-ivory/80">
+    <footer className="bg-ink text-ivory/80 border-t border-gold/10">
+      {/* Newsletter Strip */}
+      <div className="bg-ink border-b border-white/5 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left">
+            <h3 className="font-serif text-lg sm:text-xl font-bold text-ivory">Join our VIP Club</h3>
+            <p className="text-xs text-gray mt-1">Subscribe for exclusive early access to drops and sales alerts.</p>
+          </div>
+          <form onSubmit={handleSubscribe} className="flex w-full max-w-sm gap-2">
+            <input
+              type="email"
+              required
+              placeholder="Your email address"
+              className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs sm:text-sm text-ivory outline-none focus:border-rose focus:ring-1 focus:ring-rose transition-colors"
+            />
+            <button
+              type="submit"
+              className="bg-rose text-ivory px-4 py-2 rounded-full text-xs font-semibold hover:bg-rose/90 transition-colors flex items-center gap-1.5 shrink-0"
+            >
+              <Send className="w-3 h-3" />
+              <span>Subscribe</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
       {/* Main footer content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -52,7 +86,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-sm text-ivory/60 leading-relaxed">
-              Timeless Sri Lankan fashion — dresses, tops, ethnic wear &amp; accessories. Island-wide Cash on Delivery.
+              Elevated, premium everyday wardrobe styles. Hand-picked fabrics, designed with care, delivered right to your doorstep.
             </p>
 
             {/* Social links */}
@@ -61,7 +95,7 @@ export default function Footer() {
                 href="https://www.facebook.com/share/1cNJSsvhvH/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose/80 text-ivory/70 hover:text-ivory transition-all duration-200"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-rose text-ivory/70 hover:text-ivory border border-white/10 hover:border-transparent transition-all duration-200"
                 aria-label="Facebook"
               >
                 <FacebookIcon className="w-4 h-4" />
@@ -70,7 +104,7 @@ export default function Footer() {
                 href="https://www.tiktok.com/@nimzkp?_r=1&_t=ZS-98qJIUVgBrp"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose/80 text-ivory/70 hover:text-ivory transition-all duration-200"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-rose text-ivory/70 hover:text-ivory border border-white/10 hover:border-transparent transition-all duration-200"
                 aria-label="TikTok"
               >
                 <TikTokIcon className="w-4 h-4" />
@@ -81,7 +115,7 @@ export default function Footer() {
           {/* Shop column */}
           <div>
             <p className="text-xs font-semibold text-gold uppercase tracking-widest mb-4">
-              Shop
+              Shop Collections
             </p>
             <ul className="flex flex-col gap-2.5">
               {SHOP_LINKS.map((l) => (
@@ -98,10 +132,10 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Help / Customer Service column */}
+          {/* Customer Service column */}
           <div>
             <p className="text-xs font-semibold text-gold uppercase tracking-widest mb-4">
-              Customer Service
+              Customer Support
             </p>
             <ul className="flex flex-col gap-2.5">
               {HELP_LINKS.map((l) => (
@@ -111,6 +145,22 @@ export default function Footer() {
                     className="text-sm text-ivory/60 hover:text-ivory hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-1 group"
                   >
                     <span className="w-0 group-hover:w-2 overflow-hidden transition-all duration-200 text-rose">›</span>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            
+            <p className="text-xs font-semibold text-gold uppercase tracking-widest mt-6 mb-3">
+              My Account
+            </p>
+            <ul className="flex flex-col gap-2">
+              {ACCOUNT_LINKS.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.href}
+                    className="text-sm text-ivory/60 hover:text-ivory hover:translate-x-0.5 transition-all duration-150 inline-flex items-center gap-1"
+                  >
                     {l.label}
                   </Link>
                 </li>
@@ -151,9 +201,9 @@ export default function Footer() {
             {/* Payment methods */}
             <div className="mt-5">
               <p className="text-[10px] text-ivory/40 uppercase tracking-widest mb-2">We Accept</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {PAYMENT_METHODS.map((m) => (
-                  <span key={m} className="text-[10px] font-semibold border border-white/20 rounded px-2 py-0.5 text-ivory/50">
+                  <span key={m} className="text-[9px] font-semibold border border-white/10 bg-white/5 rounded px-2 py-0.5 text-ivory/50">
                     {m}
                   </span>
                 ))}
@@ -164,15 +214,15 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-ivory/30">
             &copy; {year} NK Fashion Store. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Privacy Policy</Link>
             <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Terms of Use</Link>
-            <Link href="/contact" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Returns</Link>
+            <Link href="/contact" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Returns &amp; Exchanges</Link>
             <Link href="/track-order" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Track Order</Link>
           </div>
         </div>

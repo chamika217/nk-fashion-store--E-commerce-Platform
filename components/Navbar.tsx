@@ -28,22 +28,22 @@ const SHOP_CATEGORIES = [
     sub: ["Girls", "Boys"],
   },
   {
-    label: "Accessories",
-    href: "/shop?category=Accessories",
-    icon: "👜",
-    sub: ["Bags", "Jewelry", "Footwear"],
-  },
-  {
     label: "New Arrivals",
     href: "/shop",
     icon: "✨",
-    sub: [],
+    sub: ["Latest Outfits", "Seasonal Drops"],
   },
   {
     label: "Best Sellers",
     href: "/shop",
     icon: "🔥",
-    sub: [],
+    sub: ["Trending", "Customer Favorites"],
+  },
+  {
+    label: "Sale",
+    href: "/shop?onSale=true",
+    icon: "🏷️",
+    sub: ["Special Offers", "Clearance"],
   },
 ];
 
@@ -177,7 +177,12 @@ export default function Navbar() {
           ))}
 
           {/* Shop with mega dropdown */}
-          <div ref={shopRef} className="relative">
+          <div
+            ref={shopRef}
+            className="relative"
+            onMouseEnter={() => setShopOpen(true)}
+            onMouseLeave={() => setShopOpen(false)}
+          >
             <button
               onClick={() => setShopOpen((v) => !v)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-lg transition-all duration-200"
@@ -196,48 +201,48 @@ export default function Navbar() {
             <AnimatePresence>
               {shopOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                  transition={{ duration: 0.18 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[600px] bg-ivory rounded-2xl shadow-2xl border border-gray-light overflow-hidden"
+                  exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[650px] bg-ivory rounded-2xl shadow-2xl border border-gold/20 overflow-hidden z-50"
                 >
                   {/* Dropdown header */}
-                  <div className="bg-ink px-6 py-3 flex items-center justify-between">
+                  <div className="bg-ink px-6 py-4 flex items-center justify-between border-b border-gold/10">
                     <p className="text-xs font-semibold text-gold uppercase tracking-widest">
-                      Shop by Category
+                      Shop by Collection
                     </p>
                     <Link
                       href="/shop"
                       onClick={() => setShopOpen(false)}
-                      className="text-xs text-ivory/60 hover:text-ivory transition-colors"
+                      className="text-xs text-ivory/70 hover:text-rose transition-colors"
                     >
-                      View all →
+                      Explore All Collections →
                     </Link>
                   </div>
 
                   {/* Categories grid */}
-                  <div className="grid grid-cols-3 gap-0 p-4">
+                  <div className="grid grid-cols-3 gap-6 p-6">
                     {SHOP_CATEGORIES.map((cat) => (
-                      <div key={cat.label} className="flex flex-col">
+                      <div key={cat.label} className="flex flex-col gap-1.5">
                         <Link
                           href={cat.href}
                           onClick={() => setShopOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-rose-light/50 transition-colors group"
+                          className="flex items-center gap-2 p-2 rounded-xl hover:bg-rose-light/20 transition-all duration-200 group border border-transparent hover:border-rose-light/30"
                         >
-                          <span className="text-lg">{cat.icon}</span>
+                          <span className="text-xl bg-white p-1.5 rounded-lg shadow-xs group-hover:scale-110 transition-transform duration-250">{cat.icon}</span>
                           <span className="text-sm font-semibold text-ink group-hover:text-rose transition-colors">
                             {cat.label}
                           </span>
                         </Link>
                         {cat.sub.length > 0 && (
-                          <div className="pl-10 flex flex-col gap-0.5 mb-2">
+                          <div className="pl-3 flex flex-col gap-1.5">
                             {cat.sub.map((s) => (
                               <Link
                                 key={s}
                                 href={`${cat.href}&sub=${encodeURIComponent(s)}`}
                                 onClick={() => setShopOpen(false)}
-                                className="text-xs text-gray hover:text-rose transition-colors py-0.5"
+                                className="text-xs text-gray hover:text-rose transition-colors py-0.5 border-l border-gray-light hover:border-rose pl-3"
                               >
                                 {s}
                               </Link>

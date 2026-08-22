@@ -9,14 +9,16 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAdminAuth();
+  const { user, adminProfile, loading } = useAdminAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/admin/login");
+    if (!loading) {
+      if (!user || !adminProfile) {
+        router.replace("/admin/login");
+      }
     }
-  }, [loading, user, router]);
+  }, [loading, user, adminProfile, router]);
 
   // While auth state is resolving, show a neutral loading screen
   if (loading) {
@@ -27,8 +29,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Not authenticated — return null while the redirect fires
-  if (!user) return null;
+  // Not authenticated or not an admin — return null while redirect fires
+  if (!user || !adminProfile) return null;
 
   return <>{children}</>;
 }
