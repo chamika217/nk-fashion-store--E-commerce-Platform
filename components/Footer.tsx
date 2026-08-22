@@ -9,14 +9,16 @@ const SHOP_LINKS = [
   { label: "Kids' Wear",   href: "/shop?category=Kids%27+Wear"   },
   { label: "Accessories",  href: "/shop?category=Accessories"    },
   { label: "New Arrivals", href: "/shop"                          },
+  { label: "All Products", href: "/shop"                          },
 ];
 
 const HELP_LINKS = [
-  { label: "Track Order",       href: "/track-order"     },
-  { label: "Contact Us",        href: "/contact"         },
-  { label: "About Us",          href: "/about"           },
-  { label: "My Account",        href: "/account"         },
-  { label: "My Orders",         href: "/account"         },
+  { label: "Track Order",  href: "/track-order" },
+  { label: "Contact Us",   href: "/contact"     },
+  { label: "About Us",     href: "/about"       },
+  { label: "My Account",   href: "/account"     },
+  { label: "My Orders",    href: "/account"     },
+  { label: "Sign Up",      href: "/account/signup" },
 ];
 
 const PAYMENT_METHODS = ["COD", "Bank Transfer"];
@@ -168,9 +170,10 @@ export default function Footer() {
             &copy; {year} NK Fashion Store. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Privacy</Link>
-            <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Terms</Link>
+            <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Privacy Policy</Link>
+            <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Terms of Use</Link>
             <Link href="/contact" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Returns</Link>
+            <Link href="/track-order" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Track Order</Link>
           </div>
         </div>
       </div>
