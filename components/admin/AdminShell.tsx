@@ -10,18 +10,23 @@ import { useAdminAuth } from "@/context/AdminAuthContext";
 import { hasPermission } from "@/lib/permissions";
 import type { Permission } from "@/lib/types";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
-import { NotificationProvider } from "@/context/NotificationContext";
-import NotificationBell from "@/components/admin/NotificationBell";
+import { NotificationProvider, useNotifications } from "@/context/NotificationContext";
 
 // Each nav link declares the permission needed to see it.
 // undefined = always visible (Dashboard).
-const ALL_NAV_LINKS: { label: string; href: string; icon: string; permission?: Permission }[] = [
+const ALL_NAV_LINKS: {
+  label: string;
+  href: string;
+  icon: string;
+  permission?: Permission;
+  isNotifications?: boolean;
+}[] = [
   { label: "Dashboard",     href: "/admin/dashboard",     icon: "🏠" },
   { label: "Products",      href: "/admin/products",      icon: "👗", permission: "products:view"   },
   { label: "Categories",    href: "/admin/categories",    icon: "🗂️", permission: "categories:view" },
   { label: "Orders",        href: "/admin/orders",        icon: "📦", permission: "orders:view"     },
   { label: "Customers",     href: "/admin/customers",     icon: "👥", permission: "customers:view"  },
-  { label: "Notifications", href: "/admin/notifications", icon: "🔔" },
+  { label: "Notifications", href: "/admin/notifications", icon: "🔔", isNotifications: true         },
   { label: "Content",       href: "/admin/content",       icon: "📝", permission: "content:view"    },
   { label: "Reports",       href: "/admin/reports",       icon: "📊", permission: "reports:view"    },
   { label: "Users",         href: "/admin/users",         icon: "🔑", permission: "users:manage"    },
@@ -32,7 +37,7 @@ interface AdminShellProps {
   children: ReactNode;
 }
 
-// ── Hamburger icon ────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 function HamburgerIcon() {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +45,6 @@ function HamburgerIcon() {
     </svg>
   );
 }
-
 function CloseIcon() {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,14 +52,42 @@ function CloseIcon() {
     </svg>
   );
 }
+function BellIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
+
+// ── Mobile top-bar bell button (standalone — outside sidebar) ─────────────────
+function MobileBellButton() {
+  const { unreadCount } = useNotifications();
+  const router = useRouter();
+  return (
+    <button
+      onClick={() => router.push("/admin/notifications")}
+      className="relative p-2 rounded-lg text-white/70 hover:text-ivory hover:bg-white/10 transition-colors"
+      aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+    >
+      <BellIcon />
+      {unreadCount > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-rose text-ivory text-[10px] font-bold rounded-full px-1 leading-none">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
+    </button>
+  );
+}
 
 function Shell({ children }: AdminShellProps) {
-  const router            = useRouter();
-  const pathname          = usePathname();
+  const router               = useRouter();
+  const pathname             = usePathname();
   const { adminProfile, role } = useAdminAuth();
+  const { unreadCount }      = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Show a link if it has no permission requirement OR the current role has it
   const navLinks = ALL_NAV_LINKS.filter(
     (l) => !l.permission || hasPermission(role, l.permission)
   );
@@ -65,77 +97,83 @@ function Shell({ children }: AdminShellProps) {
     router.push("/admin/login");
   }
 
-  // ── Sidebar content (shared between desktop + mobile drawer) ─────────────
-  const SidebarContent = (
-    <>
-      {/* Logo */}
-      <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
-        <Image
-          src="/Logo.png"
-          alt="NK Fashion Store"
-          width={40}
-          height={40}
-          style={{ width: 40, height: 40 }}
-          className="rounded-full object-cover shrink-0"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="font-serif text-sm font-bold tracking-wide leading-snug text-ivory truncate">
-            NK Fashion Store
-          </p>
-          <p className="text-[10px] uppercase tracking-widest text-white/40 mt-0.5">
-            Admin Panel
-          </p>
-        </div>
-        {/* Notification bell — desktop sidebar header */}
-        <NotificationBell />
-      </div>
+  // ── Sidebar nav ───────────────────────────────────────────────────────────
+  const SidebarNav = (
+    <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+      {navLinks.map((link) => {
+        const active = pathname === link.href || pathname.startsWith(link.href + "/");
+        const badge  = link.isNotifications && unreadCount > 0 ? unreadCount : 0;
 
-      {/* Nav links */}
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
-        {navLinks.map((link) => {
-          const active =
-            pathname === link.href || pathname.startsWith(link.href + "/");
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                active
-                  ? "bg-white/15 text-ivory font-medium"
-                  : "text-white/80 hover:bg-white/10 hover:text-ivory"
-              }`}
-            >
-              <span className="text-base shrink-0">{link.icon}</span>
-              {link.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User info + logout */}
-      <div className="px-4 py-5 border-t border-white/10 flex flex-col gap-3">
-        {adminProfile && (
-          <div className="px-1">
-            <p className="text-sm font-medium text-ivory leading-snug truncate">
-              {adminProfile.name}
-            </p>
-            <p className="text-xs text-white/40 truncate">{adminProfile.email}</p>
-            {role && (
-              <p className="text-[10px] uppercase tracking-widest text-white/30 mt-0.5">
-                {role.name}
-              </p>
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+              active
+                ? "bg-white/15 text-ivory font-medium"
+                : "text-white/80 hover:bg-white/10 hover:text-ivory"
+            }`}
+          >
+            <span className="text-base shrink-0">{link.icon}</span>
+            <span className="flex-1">{link.label}</span>
+            {/* Unread badge on Notifications link */}
+            {badge > 0 && (
+              <span className="min-w-[20px] h-5 flex items-center justify-center bg-rose text-ivory text-[10px] font-bold rounded-full px-1.5 leading-none shrink-0">
+                {badge > 99 ? "99+" : badge}
+              </span>
             )}
-          </div>
-        )}
-        <button
-          onClick={handleLogout}
-          className="w-full text-sm text-white/70 border border-white/20 rounded-lg py-2 hover:bg-white/10 hover:text-ivory transition-colors"
-        >
-          Log Out
-        </button>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  // ── Sidebar header ────────────────────────────────────────────────────────
+  const SidebarHeader = (
+    <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
+      <Image
+        src="/Logo.png"
+        alt="NK Fashion Store"
+        width={40}
+        height={40}
+        style={{ width: 40, height: 40 }}
+        className="rounded-full object-cover shrink-0"
+      />
+      <div className="min-w-0">
+        <p className="font-serif text-sm font-bold tracking-wide leading-snug text-ivory truncate">
+          NK Fashion Store
+        </p>
+        <p className="text-[10px] uppercase tracking-widest text-white/40 mt-0.5">
+          Admin Panel
+        </p>
       </div>
-    </>
+    </div>
+  );
+
+  // ── Sidebar footer ────────────────────────────────────────────────────────
+  const SidebarFooter = (
+    <div className="px-4 py-5 border-t border-white/10 flex flex-col gap-3">
+      {adminProfile && (
+        <div className="px-1">
+          <p className="text-sm font-medium text-ivory leading-snug truncate">
+            {adminProfile.name}
+          </p>
+          <p className="text-xs text-white/40 truncate">{adminProfile.email}</p>
+          {role && (
+            <p className="text-[10px] uppercase tracking-widest text-white/30 mt-0.5">
+              {role.name}
+            </p>
+          )}
+        </div>
+      )}
+      <button
+        onClick={handleLogout}
+        className="w-full text-sm text-white/70 border border-white/20 rounded-lg py-2 hover:bg-white/10 hover:text-ivory transition-colors"
+      >
+        Log Out
+      </button>
+    </div>
   );
 
   return (
@@ -143,7 +181,9 @@ function Shell({ children }: AdminShellProps) {
 
       {/* ── Desktop sidebar (md+) ─────────────────────────────────────────── */}
       <aside className="hidden md:flex w-60 shrink-0 bg-ink text-ivory flex-col">
-        {SidebarContent}
+        {SidebarHeader}
+        {SidebarNav}
+        {SidebarFooter}
       </aside>
 
       {/* ── Mobile sidebar backdrop ───────────────────────────────────────── */}
@@ -155,13 +195,12 @@ function Shell({ children }: AdminShellProps) {
         />
       )}
 
-      {/* ── Mobile sidebar drawer (slide in from left) ────────────────────── */}
+      {/* ── Mobile sidebar drawer ─────────────────────────────────────────── */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-ink text-ivory flex flex-col
           transform transition-transform duration-250 ease-in-out md:hidden
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* Close button inside drawer */}
         <button
           onClick={() => setSidebarOpen(false)}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-white/60 hover:text-ivory hover:bg-white/10 transition-colors"
@@ -169,7 +208,9 @@ function Shell({ children }: AdminShellProps) {
         >
           <CloseIcon />
         </button>
-        {SidebarContent}
+        {SidebarHeader}
+        {SidebarNav}
+        {SidebarFooter}
       </aside>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
@@ -197,8 +238,7 @@ function Shell({ children }: AdminShellProps) {
               NK Admin
             </span>
           </div>
-          {/* Notification bell — mobile top bar */}
-          <NotificationBell />
+          <MobileBellButton />
         </div>
 
         {/* Page content */}
