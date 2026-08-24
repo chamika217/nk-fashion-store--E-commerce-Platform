@@ -219,7 +219,7 @@ export default function Footer() {
           <p className="text-xs text-ivory/30">
             &copy; {year} NK Fashion Store. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-4 gap-y-2">
             <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Privacy Policy</Link>
             <Link href="/about" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Terms of Use</Link>
             <Link href="/contact" className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors">Returns &amp; Exchanges</Link>
