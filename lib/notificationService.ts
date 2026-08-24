@@ -5,11 +5,10 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  query,
-  orderBy,
   onSnapshot,
   writeBatch,
   type Unsubscribe,
+  type DocumentData,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { Notification, NotificationType } from "./types";
@@ -53,21 +52,33 @@ export async function pushNotification({
 // ── Read ──────────────────────────────────────────────────────────────────────
 
 export async function getNotifications(): Promise<Notification[]> {
-  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Notification));
+  const snap = await getDocs(collection(db, COL));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Notification))
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 }
 
 /** Real-time listener — returns an unsubscribe function */
 export function subscribeToNotifications(
-  callback: (notifications: Notification[]) => void
+  callback: (notifications: Notification[]) => void,
+  onError?: (err: Error) => void
 ): Unsubscribe {
-  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => {
-    callback(
-      snap.docs.map((d) => ({ id: d.id, ...d.data() } as Notification))
-    );
-  });
+  // Use collection-level listener without orderBy to avoid needing a
+  // composite index. Sort client-side by createdAt descending.
+  const q = collection(db, COL);
+  return onSnapshot(
+    q,
+    (snap) => {
+      const data = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() } as Notification))
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      callback(data);
+    },
+    (err) => {
+      console.error("[NotificationService] onSnapshot error:", err.code, err.message);
+      onError?.(err);
+    }
+  );
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
@@ -77,12 +88,11 @@ export async function markAsRead(id: string): Promise<void> {
 }
 
 export async function markAllAsRead(): Promise<void> {
-  const q    = query(collection(db, COL));
-  const snap = await getDocs(q);
+  const snap = await getDocs(collection(db, COL));
   if (snap.empty) return;
   const batch = writeBatch(db);
   snap.docs
-    .filter((d) => !d.data().read)
+    .filter((d) => !(d.data() as DocumentData).read)
     .forEach((d) => batch.update(d.ref, { read: true }));
   await batch.commit();
 }

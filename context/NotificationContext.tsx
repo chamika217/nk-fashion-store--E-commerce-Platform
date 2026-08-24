@@ -50,10 +50,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
 
     setLoading(true);
-    const unsub = subscribeToNotifications((data) => {
-      setNotifications(data);
-      setLoading(false);
-    });
+    const unsub = subscribeToNotifications(
+      (data) => {
+        setNotifications(data);
+        setLoading(false);
+      },
+      (err) => {
+        // Permission denied or network error — stop loading, show empty state
+        console.error("[NotificationContext] Subscription error:", err.message);
+        setNotifications([]);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [user]);
 
