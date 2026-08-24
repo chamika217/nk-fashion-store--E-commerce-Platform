@@ -13,37 +13,58 @@ const SHOP_CATEGORIES = [
     label: "Women",
     href: "/shop?category=Women%27s+Wear",
     icon: "👗",
-    sub: ["Dresses", "Tops", "Bottoms", "Ethnic Wear"],
+    sub: [
+      { label: "Dresses",     href: "/shop?category=Women%27s+Wear&sub=Dresses"     },
+      { label: "Tops",        href: "/shop?category=Women%27s+Wear&sub=Tops"        },
+      { label: "Bottoms",     href: "/shop?category=Women%27s+Wear&sub=Bottoms"     },
+      { label: "Ethnic Wear", href: "/shop?category=Women%27s+Wear&sub=Ethnic+Wear" },
+    ],
   },
   {
     label: "Men",
     href: "/shop?category=Men%27s+Wear",
     icon: "👔",
-    sub: ["Shirts", "T-Shirts", "Bottoms"],
+    sub: [
+      { label: "Shirts",   href: "/shop?category=Men%27s+Wear&sub=Shirts"   },
+      { label: "T-Shirts", href: "/shop?category=Men%27s+Wear&sub=T-Shirts" },
+      { label: "Bottoms",  href: "/shop?category=Men%27s+Wear&sub=Bottoms"  },
+    ],
   },
   {
     label: "Kids",
     href: "/shop?category=Kids%27+Wear",
     icon: "🧒",
-    sub: ["Girls", "Boys"],
+    sub: [
+      { label: "Girls", href: "/shop?category=Kids%27+Wear&sub=Girls" },
+      { label: "Boys",  href: "/shop?category=Kids%27+Wear&sub=Boys"  },
+    ],
   },
   {
     label: "New Arrivals",
-    href: "/shop",
+    href: "/shop?sort=new",
     icon: "✨",
-    sub: ["Latest Outfits", "Seasonal Drops"],
+    sub: [
+      { label: "Latest Outfits",  href: "/shop?sort=new"                              },
+      { label: "Seasonal Drops",  href: "/shop?sort=new"                              },
+    ],
   },
   {
     label: "Best Sellers",
-    href: "/shop",
+    href: "/shop?sort=popular",
     icon: "🔥",
-    sub: ["Trending", "Customer Favorites"],
+    sub: [
+      { label: "Trending",            href: "/shop?sort=popular" },
+      { label: "Customer Favorites",  href: "/shop?sort=popular" },
+    ],
   },
   {
     label: "Sale",
     href: "/shop?onSale=true",
     icon: "🏷️",
-    sub: ["Special Offers", "Clearance"],
+    sub: [
+      { label: "Special Offers", href: "/shop?onSale=true" },
+      { label: "Clearance",      href: "/shop?onSale=true" },
+    ],
   },
 ];
 
@@ -239,12 +260,12 @@ export default function Navbar() {
                           <div className="pl-3 flex flex-col gap-1.5">
                             {cat.sub.map((s) => (
                               <Link
-                                key={s}
-                                href={`${cat.href}&sub=${encodeURIComponent(s)}`}
+                                key={s.label}
+                                href={s.href}
                                 onClick={() => setShopOpen(false)}
                                 className="text-xs text-gray hover:text-rose transition-colors py-0.5 border-l border-gray-light hover:border-rose pl-3"
                               >
-                                {s}
+                                {s.label}
                               </Link>
                             ))}
                           </div>

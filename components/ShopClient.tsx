@@ -78,33 +78,70 @@ export default function ShopClient({
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     urlCategory ? [urlCategory] : []
   );
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>(
+    searchParams.get("sub") ?? ""
+  );
+  const [sortMode, setSortMode] = useState<string>(
+    searchParams.get("sort") ?? ""
+  );
+  const [onSaleOnly, setOnSaleOnly] = useState<boolean>(
+    searchParams.get("onSale") === "true"
+  );
 
-  // Keep category filter in sync whenever the URL ?category param changes
-  // (e.g. user clicks a category from the Home page or the Navbar while
-  //  already on the Shop page — useState initialiser only runs once on mount)
+  // Keep all URL-driven filters in sync when the URL changes
+  // (e.g. user clicks a category/sub/sort link while already on the Shop page)
   useEffect(() => {
-    const cat = searchParams.get("category") ?? "";
+    const cat  = searchParams.get("category") ?? "";
+    const sub  = searchParams.get("sub") ?? "";
+    const sort = searchParams.get("sort") ?? "";
+    const sale = searchParams.get("onSale") === "true";
     setSelectedCategories(cat ? [cat] : []);
+    setSelectedSubcategory(sub);
+    setSortMode(sort);
+    setOnSaleOnly(sale);
   }, [searchParams]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // Filtered products
+  // Filtered + sorted products
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    let result = products.filter((p) => {
       if (p.status === "hidden") return false;
       if (selectedCategories.length > 0 && !selectedCategories.includes(p.category)) return false;
+      // Subcategory filter — matches product.subcategory (case-insensitive)
+      if (selectedSubcategory) {
+        const sub = selectedSubcategory.toLowerCase();
+        if (!p.subcategory || p.subcategory.toLowerCase() !== sub) return false;
+      }
       if (selectedSizes.length > 0) {
         const productSizes = p.variants?.map((v) => v.size) ?? [];
         if (!selectedSizes.some((s) => productSizes.includes(s))) return false;
       }
       if (!matchesPrice(p.price, priceRange)) return false;
       if (inStockOnly && (p.totalStock === 0 || p.status === "out-of-stock")) return false;
+      // onSale: show only in-stock products when onSale param is set
+      // (no dedicated sale field in the data model — shows available items)
+      if (onSaleOnly && (p.totalStock === 0 || p.status === "out-of-stock")) return false;
       return true;
     });
-  }, [products, selectedCategories, selectedSizes, priceRange, inStockOnly]);
+
+    // Sort
+    if (sortMode === "new") {
+      result = [...result].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    } else if (sortMode === "popular") {
+      // No real popularity metric — keep server order (which is creation order)
+      // but put in-stock items first so "Best Sellers" shows available stock
+      result = [...result].sort((a, b) => {
+        const aIn = a.totalStock > 0 ? 0 : 1;
+        const bIn = b.totalStock > 0 ? 0 : 1;
+        return aIn - bIn;
+      });
+    }
+
+    return result;
+  }, [products, selectedCategories, selectedSubcategory, selectedSizes, priceRange, inStockOnly, onSaleOnly, sortMode]);
 
   function toggleCategory(name: string) {
     setSelectedCategories((prev) =>
@@ -120,16 +157,22 @@ export default function ShopClient({
 
   function clearFilters() {
     setSelectedCategories([]);
+    setSelectedSubcategory("");
     setSelectedSizes([]);
     setPriceRange("all");
     setInStockOnly(false);
+    setOnSaleOnly(false);
+    setSortMode("");
   }
 
   const hasActiveFilters =
     selectedCategories.length > 0 ||
+    !!selectedSubcategory ||
     selectedSizes.length > 0 ||
     priceRange !== "all" ||
-    inStockOnly;
+    inStockOnly ||
+    onSaleOnly ||
+    !!sortMode;
 
   // ── Filter panel (shared by sidebar + mobile drawer) ──────────────────────
   const FilterPanel = (
@@ -273,6 +316,45 @@ export default function ShopClient({
 
       {/* ── Product grid ── */}
       <div className="flex-1">
+        {/* Active filter badges — shows what's currently applied from the URL */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {selectedCategories.map((cat) => (
+              <span key={cat} className="inline-flex items-center gap-1 text-xs bg-rose-light/30 text-rose px-3 py-1 rounded-full border border-rose/20">
+                {cat}
+                <button onClick={() => setSelectedCategories((prev) => prev.filter((c) => c !== cat))} aria-label={`Remove ${cat}`} className="hover:text-ink ml-0.5">×</button>
+              </span>
+            ))}
+            {selectedSubcategory && (
+              <span className="inline-flex items-center gap-1 text-xs bg-rose-light/30 text-rose px-3 py-1 rounded-full border border-rose/20">
+                {selectedSubcategory}
+                <button onClick={() => setSelectedSubcategory("")} aria-label="Remove subcategory" className="hover:text-ink ml-0.5">×</button>
+              </span>
+            )}
+            {sortMode === "new" && (
+              <span className="inline-flex items-center gap-1 text-xs bg-ink/10 text-ink px-3 py-1 rounded-full border border-ink/20">
+                ✨ New Arrivals
+                <button onClick={() => setSortMode("")} aria-label="Remove sort" className="hover:text-rose ml-0.5">×</button>
+              </span>
+            )}
+            {sortMode === "popular" && (
+              <span className="inline-flex items-center gap-1 text-xs bg-ink/10 text-ink px-3 py-1 rounded-full border border-ink/20">
+                🔥 Best Sellers
+                <button onClick={() => setSortMode("")} aria-label="Remove sort" className="hover:text-rose ml-0.5">×</button>
+              </span>
+            )}
+            {onSaleOnly && (
+              <span className="inline-flex items-center gap-1 text-xs bg-gold/10 text-gold px-3 py-1 rounded-full border border-gold/20">
+                🏷️ Sale
+                <button onClick={() => setOnSaleOnly(false)} aria-label="Remove sale filter" className="hover:text-ink ml-0.5">×</button>
+              </span>
+            )}
+            <button onClick={clearFilters} className="text-xs text-gray hover:text-rose underline underline-offset-2 transition-colors ml-1">
+              Clear all
+            </button>
+          </div>
+        )}
+
         {/* Result count */}
         <p className="text-sm text-gray mb-5">
           {filtered.length} product{filtered.length !== 1 ? "s" : ""}
