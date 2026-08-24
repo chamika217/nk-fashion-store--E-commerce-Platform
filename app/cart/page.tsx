@@ -3,12 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
-// NOTE: Cart is open to guests. Login is only required at checkout.
-// Guest cart is stored in localStorage via CartContext.
+// NOTE: Cart is open to guests — browsing and adding items requires no login.
+// Login is required only when proceeding to checkout.
 
 export default function CartPage() {
   const { cartItems, cartTotal, updateQty, removeFromCart } = useCart();
+  const { user, loading: authLoading } = useCustomerAuth();
 
   // ── Empty state ───────────────────────────────────────────────────────────
   if (cartItems.length === 0) {
@@ -121,12 +123,36 @@ export default function CartPage() {
               </p>
 
               <div className="flex flex-col gap-3 pt-2">
-                <Link
-                  href="/checkout"
-                  className="bg-ink text-ivory text-sm font-medium text-center py-3 rounded-full hover:bg-rose transition-colors duration-200"
-                >
-                  Proceed to Checkout
-                </Link>
+                {/* Checkout requires login — guests are redirected to login
+                    with a ?redirect=/checkout param so they land back here */}
+                {authLoading ? (
+                  <div className="bg-gray-light text-gray text-sm font-medium text-center py-3 rounded-full animate-pulse">
+                    Loading…
+                  </div>
+                ) : user ? (
+                  <Link
+                    href="/checkout"
+                    className="bg-ink text-ivory text-sm font-medium text-center py-3 rounded-full hover:bg-rose transition-colors duration-200"
+                  >
+                    Proceed to Checkout
+                  </Link>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href="/account/login?redirect=/checkout"
+                      className="bg-rose text-ivory text-sm font-medium text-center py-3 rounded-full hover:bg-rose/90 transition-colors duration-200"
+                    >
+                      Login to Checkout
+                    </Link>
+                    <p className="text-xs text-gray text-center">
+                      You need to{" "}
+                      <Link href="/account/login?redirect=/checkout" className="text-rose underline underline-offset-2 hover:text-ink transition-colors">
+                        sign in
+                      </Link>{" "}
+                      before placing an order.
+                    </p>
+                  </div>
+                )}
                 <Link
                   href="/shop"
                   className="text-sm text-center text-gray hover:text-rose transition-colors"

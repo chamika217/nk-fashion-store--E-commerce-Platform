@@ -73,6 +73,13 @@ export default function CheckoutPage() {
     }
   }, [cartItems.length, router]);
 
+  // Redirect guests to login — checkout requires authentication
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/account/login?redirect=/checkout");
+    }
+  }, [authLoading, user, router]);
+
   // Pre-fill form from logged-in customer profile (convenience only — form stays editable)
   useEffect(() => {
     if (!user) return;
@@ -93,8 +100,9 @@ export default function CheckoutPage() {
   // Don't render until we know cart has items (avoids flash)
   if (cartItems.length === 0) return null;
 
-  // Don't render while auth is resolving
-  if (authLoading) {
+  // Don't render while auth is resolving or if user is not logged in
+  // (the useEffect above will redirect guests to login)
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center text-sm text-gray">
         Loading…

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { trackViewContent, trackAddToCart } from "@/lib/pixels";
 import { getProductsByCategory, getProductById } from "@/lib/productService";
 import type { Product } from "@/lib/types";
@@ -60,6 +61,7 @@ function ChevronIcon({ open }: { open: boolean }) {
 
 export default function ProductDetailView({ product }: ProductDetailViewProps) {
   const { addToCart } = useCart();
+  const { user } = useCustomerAuth();
   const router = useRouter();
 
   const [activeImage, setActiveImage] = useState(0);
@@ -254,6 +256,11 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
   function handleBuyNow() {
     if (!canAddToCart || !selectedVariant) return;
+    // Buy Now requires login — guest users are sent to login with redirect back
+    if (!user) {
+      router.push(`/account/login?redirect=/product/${product.id}`);
+      return;
+    }
     addToCart({
       productId: product.id,
       name: product.name,
