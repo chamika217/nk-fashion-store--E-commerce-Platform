@@ -9,6 +9,7 @@ import {
 } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { usePathname } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -27,10 +28,22 @@ const CustomerAuthContext = createContext<CustomerAuthContextValue | null>(null)
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const pathname              = usePathname();
+
+  // Admin routes handle their own auth — skip the admin-session sign-out
+  // check on those pages so the admin dashboard keeps working.
+  const isAdminRoute = pathname?.startsWith("/admin") ?? false;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // On admin routes, don't interfere — AdminAuthContext handles it.
+        if (isAdminRoute) {
+          setUser(null);   // don't expose admin user as a customer session
+          setLoading(false);
+          return;
+        }
+
         // Security check: if the signed-in user is an admin, their session
         // must never be exposed on the public storefront. Firebase Auth uses a
         // single shared instance, so an admin login at /admin persists and
@@ -64,7 +77,10 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  // Re-run when the route changes so switching between /admin and storefront
+  // always applies the correct session handling.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdminRoute]);
 
   return (
     <CustomerAuthContext.Provider value={{ user, loading }}>
