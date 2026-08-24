@@ -10,19 +10,22 @@ import { useAdminAuth } from "@/context/AdminAuthContext";
 import { hasPermission } from "@/lib/permissions";
 import type { Permission } from "@/lib/types";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
+import { NotificationProvider } from "@/context/NotificationContext";
+import NotificationBell from "@/components/admin/NotificationBell";
 
 // Each nav link declares the permission needed to see it.
 // undefined = always visible (Dashboard).
 const ALL_NAV_LINKS: { label: string; href: string; icon: string; permission?: Permission }[] = [
-  { label: "Dashboard",  href: "/admin/dashboard",  icon: "🏠" },
-  { label: "Products",   href: "/admin/products",   icon: "👗", permission: "products:view"   },
-  { label: "Categories", href: "/admin/categories", icon: "🗂️", permission: "categories:view" },
-  { label: "Orders",     href: "/admin/orders",     icon: "📦", permission: "orders:view"     },
-  { label: "Customers",  href: "/admin/customers",  icon: "👥", permission: "customers:view"  },
-  { label: "Content",    href: "/admin/content",    icon: "📝", permission: "content:view"    },
-  { label: "Reports",    href: "/admin/reports",    icon: "📊", permission: "reports:view"    },
-  { label: "Users",      href: "/admin/users",      icon: "🔑", permission: "users:manage"    },
-  { label: "Settings",   href: "/admin/settings",   icon: "⚙️" },
+  { label: "Dashboard",     href: "/admin/dashboard",     icon: "🏠" },
+  { label: "Products",      href: "/admin/products",      icon: "👗", permission: "products:view"   },
+  { label: "Categories",    href: "/admin/categories",    icon: "🗂️", permission: "categories:view" },
+  { label: "Orders",        href: "/admin/orders",        icon: "📦", permission: "orders:view"     },
+  { label: "Customers",     href: "/admin/customers",     icon: "👥", permission: "customers:view"  },
+  { label: "Notifications", href: "/admin/notifications", icon: "🔔" },
+  { label: "Content",       href: "/admin/content",       icon: "📝", permission: "content:view"    },
+  { label: "Reports",       href: "/admin/reports",       icon: "📊", permission: "reports:view"    },
+  { label: "Users",         href: "/admin/users",         icon: "🔑", permission: "users:manage"    },
+  { label: "Settings",      href: "/admin/settings",      icon: "⚙️" },
 ];
 
 interface AdminShellProps {
@@ -75,7 +78,7 @@ function Shell({ children }: AdminShellProps) {
           style={{ width: 40, height: 40 }}
           className="rounded-full object-cover shrink-0"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-serif text-sm font-bold tracking-wide leading-snug text-ivory truncate">
             NK Fashion Store
           </p>
@@ -83,6 +86,8 @@ function Shell({ children }: AdminShellProps) {
             Admin Panel
           </p>
         </div>
+        {/* Notification bell — desktop sidebar header */}
+        <NotificationBell />
       </div>
 
       {/* Nav links */}
@@ -179,7 +184,7 @@ function Shell({ children }: AdminShellProps) {
           >
             <HamburgerIcon />
           </button>
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <Image
               src="/Logo.png"
               alt="NK Fashion Store"
@@ -192,6 +197,8 @@ function Shell({ children }: AdminShellProps) {
               NK Admin
             </span>
           </div>
+          {/* Notification bell — mobile top bar */}
+          <NotificationBell />
         </div>
 
         {/* Page content */}
@@ -207,7 +214,9 @@ function Shell({ children }: AdminShellProps) {
 export default function AdminShell({ children }: AdminShellProps) {
   return (
     <ProtectedRoute>
-      <Shell>{children}</Shell>
+      <NotificationProvider>
+        <Shell>{children}</Shell>
+      </NotificationProvider>
     </ProtectedRoute>
   );
 }

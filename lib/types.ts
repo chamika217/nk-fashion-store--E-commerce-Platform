@@ -92,3 +92,25 @@ export interface Role {
   name: string;
   permissions: Permission[];
 }
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export type NotificationType =
+  | "new_order"       // customer placed a new order
+  | "order_confirmed" // order status changed to Confirmed
+  | "order_cancelled" // order status changed to Cancelled
+  | "order_status"    // any other order status change
+  | "low_stock"       // product stock <= lowStockThreshold
+  | "out_of_stock";   // product totalStock reached 0
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: number;
+  // Optional links for quick navigation
+  linkType?: "order" | "product";
+  linkId?: string;   // orderId or productId
+}

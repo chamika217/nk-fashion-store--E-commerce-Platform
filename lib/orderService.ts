@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { Order } from "./types";
+import { pushNotification } from "./notificationService";
 
 const ORDERS_COLLECTION = "orders";
 
@@ -32,6 +33,16 @@ export async function createOrder(
     ...order,
     orderNumber,
   });
+
+  // Notify admins of the new order (fire-and-forget — don't block checkout)
+  pushNotification({
+    type:     "new_order",
+    title:    "New Order Received 🛍️",
+    message:  `${order.customer.name} placed order ${orderNumber} — Rs. ${order.total.toLocaleString()}`,
+    linkType: "order",
+    linkId:   docRef.id,
+  }).catch(() => {});
+
   return { id: docRef.id, orderNumber };
 }
 
@@ -60,6 +71,27 @@ export async function updateOrderStatus(
 ): Promise<void> {
   const ref = doc(db, ORDERS_COLLECTION, id);
   await updateDoc(ref, { status });
+
+  // Notify admins of the status change
+  const snap = await getDoc(ref);
+  const order = snap.exists() ? ({ id: snap.id, ...snap.data() } as Order) : null;
+  const label = order ? `${order.orderNumber} (${order.customer.name})` : id;
+
+  let type:    Parameters<typeof pushNotification>[0]["type"] = "order_status";
+  let title   = `Order ${status} 📋`;
+  let message = `Order ${label} changed to ${status}`;
+
+  if (status === "Confirmed") {
+    type    = "order_confirmed";
+    title   = "Order Confirmed ✅";
+    message = `Order ${label} has been confirmed`;
+  } else if (status === "Cancelled") {
+    type    = "order_cancelled";
+    title   = "Order Cancelled ❌";
+    message = `Order ${label} was cancelled`;
+  }
+
+  pushNotification({ type, title, message, linkType: "order", linkId: id }).catch(() => {});
 }
 
 // Get orders by customer phone (for order lookup feature)

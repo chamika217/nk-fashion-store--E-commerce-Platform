@@ -53,6 +53,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Notifications — admin-only read/write + public create
+    // Public create allows guest checkout (createOrder) to push new_order
+    // notifications without requiring admin auth on the client side.
+    // Admins can read, update (mark as read) and delete notifications.
+    match /notifications/{notificationId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
     // Customers — each customer can read/write only their own profile doc.
     // Matched by request.auth.uid == the document ID (customers/{uid}).
     // No client can read or write another customer's doc.
