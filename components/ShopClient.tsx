@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { getProducts } from "@/lib/productService";
 import { getCategories } from "@/lib/categoryService";
 import type { Product, Category } from "@/lib/types";
@@ -45,6 +46,7 @@ function matchesPrice(price: number, range: PriceRange): boolean {
 export default function ShopClient({
   initialCategory,
 }: ShopClientProps) {
+  const searchParams = useSearchParams();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories]   = useState<Pick<Category, "name" | "slug">[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -71,10 +73,19 @@ export default function ShopClient({
     return Array.from(set).sort();
   }, [products]);
 
-  // Filter state
+  // Filter state — seeded from URL query param so navigation always works
+  const urlCategory = searchParams.get("category") ?? initialCategory ?? "";
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    initialCategory ? [initialCategory] : []
+    urlCategory ? [urlCategory] : []
   );
+
+  // Keep category filter in sync whenever the URL ?category param changes
+  // (e.g. user clicks a category from the Home page or the Navbar while
+  //  already on the Shop page — useState initialiser only runs once on mount)
+  useEffect(() => {
+    const cat = searchParams.get("category") ?? "";
+    setSelectedCategories(cat ? [cat] : []);
+  }, [searchParams]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
   const [inStockOnly, setInStockOnly] = useState(false);

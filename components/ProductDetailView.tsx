@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { trackViewContent, trackAddToCart } from "@/lib/pixels";
 import { getProductsByCategory, getProductById } from "@/lib/productService";
 import type { Product } from "@/lib/types";
@@ -61,7 +60,6 @@ function ChevronIcon({ open }: { open: boolean }) {
 
 export default function ProductDetailView({ product }: ProductDetailViewProps) {
   const { addToCart } = useCart();
-  const { user, loading: authLoading } = useCustomerAuth();
   const router = useRouter();
 
   const [activeImage, setActiveImage] = useState(0);
@@ -517,12 +515,13 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               </div>
             )}
 
-            {/* Add to Cart button */}
             {/* Add to Cart, Buy Now & Wishlist buttons */}
+            {/* Note: authLoading is intentionally NOT used to gate these buttons —
+                adding to cart is a guest action and must never wait for auth state. */}
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mt-2">
               <button
                 onClick={handleAddToCart}
-                disabled={!canAddToCart || authLoading}
+                disabled={!canAddToCart}
                 className={`flex-1 py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 ${
                   canAddToCart
                     ? added
@@ -536,7 +535,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
               <button
                 onClick={handleBuyNow}
-                disabled={!canAddToCart || authLoading}
+                disabled={!canAddToCart}
                 className={`flex-1 py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 text-center ${
                   canAddToCart
                     ? "bg-rose text-ivory hover:bg-rose/90 active:scale-95"

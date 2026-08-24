@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import ShopClient from "@/components/ShopClient";
 
 export const metadata: Metadata = {
@@ -28,7 +29,16 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             Browse our full collection
           </p>
         </div>
-        <ShopClient initialCategory={category ?? ""} />
+        {/* Suspense is required because ShopClient uses useSearchParams */}
+        <Suspense
+          fallback={
+            <p className="text-sm text-gray py-12 text-center animate-pulse">
+              Loading products…
+            </p>
+          }
+        >
+          <ShopClient initialCategory={category ?? ""} />
+        </Suspense>
       </div>
     </main>
   );
