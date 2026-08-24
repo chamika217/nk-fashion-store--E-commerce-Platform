@@ -56,9 +56,11 @@ service cloud.firestore {
     // Notifications — admin-only read/write + public create
     // Public create allows guest checkout (createOrder) to push new_order
     // notifications without requiring admin auth on the client side.
-    // Admins can read, update (mark as read) and delete notifications.
+    // Admins can read/list, update (mark as read) and delete notifications.
+    // NOTE: onSnapshot collection listener uses 'list' — must be explicitly allowed.
     match /notifications/{notificationId} {
       allow create: if true;
+      allow list:   if isAdmin();
       allow read, update, delete: if isAdmin();
     }
 

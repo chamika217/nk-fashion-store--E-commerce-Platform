@@ -37,12 +37,17 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 // ── Provider ─────────────────────────────────────────────────────────────────
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { user } = useAdminAuth();
+  const { user, loading: authLoading } = useAdminAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading]             = useState(true);
 
-  // Only subscribe when an admin is signed in
+  // Wait for auth to resolve, then subscribe only when admin is signed in.
+  // Without checking authLoading we would see user=null briefly on mount
+  // and never re-subscribe once auth resolves.
   useEffect(() => {
+    // Auth still initialising — keep loading state, don't subscribe yet
+    if (authLoading) return;
+
     if (!user) {
       setNotifications([]);
       setLoading(false);
@@ -56,14 +61,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       },
       (err) => {
-        // Permission denied or network error — stop loading, show empty state
         console.error("[NotificationContext] Subscription error:", err.message);
         setNotifications([]);
         setLoading(false);
       }
     );
     return () => unsub();
-  }, [user]);
+  }, [user, authLoading]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
