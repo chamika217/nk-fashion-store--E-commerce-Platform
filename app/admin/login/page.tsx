@@ -12,6 +12,12 @@ import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
+// The only email allowed to sign in to the admin panel.
+// Defined in .env.local as NEXT_PUBLIC_ADMIN_EMAIL.
+const ALLOWED_ADMIN_EMAIL = (
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ""
+).trim().toLowerCase();
+
 // Map Firebase Auth error codes to friendly messages
 function friendlyError(code: string): string {
   switch (code) {
@@ -40,6 +46,17 @@ export default function AdminLoginPage() {
 
     if (!email.trim() || !password) {
       setError("Email and password are required.");
+      return;
+    }
+
+    // Whitelist check — only the configured admin email is allowed.
+    // This is a UX-level guard; the real security layer is the
+    // Firestore admins/{uid} check in AdminAuthContext.
+    if (
+      ALLOWED_ADMIN_EMAIL &&
+      email.trim().toLowerCase() !== ALLOWED_ADMIN_EMAIL
+    ) {
+      setError("Invalid email or password.");
       return;
     }
 
