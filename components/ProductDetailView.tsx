@@ -220,15 +220,32 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
     selectedVariant.stock <= (product.lowStockThreshold ?? 3);
   const canAddToCart = !!selectedSize && !isOutOfStock && selectedVariant !== null;
 
+  // Validation hint shown below the buttons when user attempts to act
+  // without completing required selections
+  const [showValidation, setShowValidation] = useState(false);
+
+  // What the user still needs to select
+  const validationMessage = !selectedSize
+    ? "Please select a size to continue."
+    : selectedSize && availableColors.length > 1 && !selectedColor
+    ? "Please select a colour to continue."
+    : isOutOfStock
+    ? "This size/colour combination is out of stock."
+    : "";
+
   useEffect(() => {
     if (availableColors.length === 1 && !selectedColor) {
       setSelectedColor(availableColors[0]);
     }
   }, [availableColors, selectedColor]);
 
-  // ── handleAddToCart kept exactly as original ──────────────────────────────
+  // ── handleAddToCart ───────────────────────────────────────────────────────
   function handleAddToCart() {
-    if (!canAddToCart || !selectedVariant) return;
+    if (!canAddToCart || !selectedVariant) {
+      setShowValidation(true);
+      return;
+    }
+    setShowValidation(false);
 
     // Login is NOT required to add to cart.
     // Login is only required at checkout stage.
@@ -255,7 +272,12 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
   }
 
   function handleBuyNow() {
-    if (!canAddToCart || !selectedVariant) return;
+    if (!canAddToCart || !selectedVariant) {
+      setShowValidation(true);
+      return;
+    }
+    setShowValidation(false);
+
     // Buy Now requires login — guest users are sent to login with redirect back
     if (!user) {
       router.push(`/account/login?redirect=/product/${product.id}`);
@@ -423,7 +445,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-semibold text-ink uppercase tracking-wider">
-                    Size
+                    Size {!selectedSize && <span className="text-rose normal-case font-normal">— required</span>}
                   </p>
                   <button
                     type="button"
@@ -440,7 +462,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                     return (
                       <button
                         key={size}
-                        onClick={() => hasStock && setSelectedSize(size)}
+                        onClick={() => { hasStock && setSelectedSize(size); setShowValidation(false); }}
                         disabled={!hasStock}
                         className={`px-4 py-1.5 text-sm rounded-full border transition-colors ${
                           isSelected
@@ -462,7 +484,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
             {selectedSize && availableColors.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-ink uppercase tracking-wider mb-2">
-                  Color
+                  Color {availableColors.length > 1 && !selectedColor && <span className="text-rose normal-case font-normal">— required</span>}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {availableColors.map((color) => {
@@ -471,7 +493,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                     return (
                       <button
                         key={color}
-                        onClick={() => hasStock && setSelectedColor(color)}
+                        onClick={() => { hasStock && setSelectedColor(color); setShowValidation(false); }}
                         disabled={!hasStock}
                         className={`px-4 py-1.5 text-sm rounded-full border transition-colors ${
                           isSelected
@@ -528,13 +550,13 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mt-2">
               <button
                 onClick={handleAddToCart}
-                disabled={!canAddToCart}
+                disabled={false}
                 className={`flex-1 py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 ${
                   canAddToCart
                     ? added
                       ? "bg-rose text-ivory cursor-default text-center"
                       : "bg-ink text-ivory hover:bg-rose active:scale-95 text-center"
-                    : "bg-gray-light text-gray cursor-not-allowed text-center"
+                    : "bg-gray-light text-gray text-center"
                 }`}
               >
                 {added ? "Added ✓" : "Add to Cart"}
@@ -542,11 +564,11 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
               <button
                 onClick={handleBuyNow}
-                disabled={!canAddToCart}
+                disabled={false}
                 className={`flex-1 py-3 px-8 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 text-center ${
                   canAddToCart
                     ? "bg-rose text-ivory hover:bg-rose/90 active:scale-95"
-                    : "bg-gray-light text-gray cursor-not-allowed"
+                    : "bg-rose/50 text-ivory"
                 }`}
               >
                 Buy Now
@@ -570,6 +592,18 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                 </svg>
               </button>
             </div>
+
+            {/* Validation message — shown when user taps Add to Cart / Buy Now
+                without completing required selections */}
+            {showValidation && validationMessage && (
+              <div className="flex items-center gap-2 bg-rose-light/30 border border-rose/30 rounded-lg px-4 py-2.5 text-sm text-rose">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                {validationMessage}
+              </div>
+            )}
 
             {/* Material + weight metadata */}
             {(product.material || product.weight) && (
