@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
 import StorefrontShell from "@/components/StorefrontShell";
 
@@ -70,9 +71,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <CustomerAuthProvider>
           <CartProvider>
-            <StorefrontShell>
-              {children}
-            </StorefrontShell>
+            <WishlistProvider>
+              <StorefrontShell>
+                {children}
+              </StorefrontShell>
+            </WishlistProvider>
           </CartProvider>
         </CustomerAuthProvider>
 
