@@ -448,7 +448,7 @@ function DashboardContent() {
         </div>
 
         {/* Date Range Selector Pill */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-gray-light/80 shadow-2xs">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-gray-light/80 shadow-2xs overflow-x-auto max-w-full">
           {(
             [
               { id: "today", label: "Today" },
@@ -462,7 +462,7 @@ function DashboardContent() {
             <button
               key={item.id}
               onClick={() => setRange(item.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all duration-200 ${
                 range === item.id
                   ? "bg-ink text-ivory shadow-xs"
                   : "text-gray hover:text-ink hover:bg-gray-light/40"

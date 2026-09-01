@@ -25,6 +25,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import SearchModal from "@/components/SearchModal";
+import WishlistDrawer from "@/components/WishlistDrawer";
 
 // ── Top Announcement Ticker Items ───────────────────────────────────────────────
 const ANNOUNCEMENTS = [
@@ -85,6 +86,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [wishlistDrawerOpen, setWishlistDrawerOpen] = useState(false);
   const [mobileCategoryOpen, setMobileCategoryOpen] = useState<string | null>("men");
   const [cartBouncing, setCartBouncing] = useState(false);
 
@@ -139,6 +141,11 @@ export default function Navbar() {
       <SearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
+      />
+
+      <WishlistDrawer
+        isOpen={wishlistDrawerOpen}
+        onClose={() => setWishlistDrawerOpen(false)}
       />
 
       <header
@@ -412,8 +419,8 @@ export default function Navbar() {
               </motion.button>
 
               {/* Wishlist Button with Badge */}
-              <Link
-                href="/shop"
+              <button
+                onClick={() => setWishlistDrawerOpen(true)}
                 className="relative p-2.5 text-ivory/80 hover:text-rose hover:bg-white/10 rounded-full transition-all duration-200 group"
                 aria-label={`Wishlist (${wishlistCount} items)`}
                 title="Wishlist"
@@ -436,7 +443,7 @@ export default function Navbar() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-              </Link>
+              </button>
 
               {/* User Account / Profile */}
               <Link
@@ -717,6 +724,23 @@ export default function Navbar() {
                       </span>
                       <ChevronRight className="w-4 h-4" />
                     </Link>
+
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setWishlistDrawerOpen(true);
+                      }}
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/10 text-sm transition-colors text-rose"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Heart className="w-4 h-4 fill-rose" /> My Wishlist
+                      </span>
+                      {wishlistCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-rose text-ivory text-[10px] font-bold">
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </button>
                   </div>
 
                   {/* General Links */}

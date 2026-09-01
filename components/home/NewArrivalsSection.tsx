@@ -111,12 +111,12 @@ export default function NewArrivalsSection({
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white border border-gray-light/60 shadow-2xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-white border border-gray-light/60 shadow-2xs overflow-x-auto max-w-full">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all duration-200 ${
                   activeTab === tab.id
                     ? "bg-ink text-ivory shadow-xs"
                     : "text-gray-600 hover:text-ink hover:bg-gray-light/30"
