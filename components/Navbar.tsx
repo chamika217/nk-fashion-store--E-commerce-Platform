@@ -225,7 +225,8 @@ export default function Navbar() {
                   />
                   <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-rose border-2 border-ink" />
                 </div>
-                <div className="flex flex-col">
+                {/* Brand text — hidden on xs/sm to prevent crowding action icons */}
+                <div className="hidden sm:flex flex-col">
                   <span className="font-serif text-lg sm:text-xl font-bold tracking-wider text-ivory group-hover:text-gold transition-colors leading-none">
                     NK FASHION
                   </span>
@@ -405,25 +406,23 @@ export default function Navbar() {
             </nav>
 
             {/* Quick Action Icons (Search, Wishlist, Account, Cart, Mobile Menu) */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-0.5 sm:gap-1.5">
               {/* Search Button */}
               <motion.button
                 whileHover={reduce ? {} : { scale: 1.05 }}
                 whileTap={reduce ? {} : { scale: 0.95 }}
                 onClick={() => setSearchModalOpen(true)}
-                className="p-2.5 text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-full transition-all duration-200 relative group"
+                className="p-2 sm:p-2.5 text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-full transition-all duration-200 relative group"
                 aria-label="Search store"
               >
                 <Search className="w-5 h-5" />
-                <span className="sr-only">Search</span>
               </motion.button>
 
-              {/* Wishlist Button with Badge */}
+              {/* Wishlist Button — hidden on xs to avoid crowding */}
               <button
                 onClick={() => setWishlistDrawerOpen(true)}
-                className="relative p-2.5 text-ivory/80 hover:text-rose hover:bg-white/10 rounded-full transition-all duration-200 group"
+                className="relative hidden sm:flex p-2 sm:p-2.5 text-ivory/80 hover:text-rose hover:bg-white/10 rounded-full transition-all duration-200 group items-center justify-center"
                 aria-label={`Wishlist (${wishlistCount} items)`}
-                title="Wishlist"
               >
                 <motion.div
                   whileHover={reduce ? {} : { scale: 1.1 }}
@@ -448,9 +447,8 @@ export default function Navbar() {
               {/* User Account / Profile */}
               <Link
                 href={user ? "/account" : "/account/login"}
-                className="p-2.5 text-ivory/80 hover:text-gold hover:bg-white/10 rounded-full transition-all duration-200 relative"
+                className="p-2 sm:p-2.5 text-ivory/80 hover:text-gold hover:bg-white/10 rounded-full transition-all duration-200 relative"
                 aria-label={user ? "My Account" : "Sign In"}
-                title={user ? "Account" : "Sign In"}
               >
                 <motion.div
                   whileHover={reduce ? {} : { scale: 1.05 }}
@@ -463,11 +461,11 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Cart Button with Animated Count Badge */}
+              {/* Cart Button */}
               <Link
                 href="/cart"
-                className="relative p-2.5 text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-full transition-all duration-200"
-                aria-label={`Shopping Cart with ${cartCount} items`}
+                className="relative p-2 sm:p-2.5 text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-full transition-all duration-200"
+                aria-label={`Cart (${cartCount} items)`}
               >
                 <motion.div
                   animate={
@@ -503,16 +501,16 @@ export default function Navbar() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
 
-              {/* Mobile Hamburger Menu Button */}
+              {/* Mobile Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="lg:hidden p-2.5 text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-full transition-colors ml-1"
+                className="lg:hidden p-2 sm:p-2.5 text-ivory/80 hover:text-ivory hover:bg-white/10 rounded-full transition-colors ml-0.5"
                 aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               >
                 {mobileMenuOpen ? (
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <Menu className="w-6 h-6" />
+                  <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </button>
             </div>

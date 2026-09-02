@@ -68,7 +68,7 @@ export default function AnimatedCategoryGrid({ categories }: AnimatedCategoryGri
 
         {categories.length > 0 && (
           <motion.div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
             variants={container}
             initial="hidden"
             whileInView="visible"
@@ -81,37 +81,38 @@ export default function AnimatedCategoryGrid({ categories }: AnimatedCategoryGri
                 <motion.div
                   key={cat.slug || cat.name}
                   variants={card}
-                  whileHover={reduce ? {} : { y: -6 }}
+                  whileHover={reduce ? {} : { y: -4 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="h-full"
+                  className="w-full"
                 >
                   <Link
                     href={`/shop?category=${encodeURIComponent(cat.name)}`}
-                    className="group relative flex flex-col justify-end rounded-2xl overflow-hidden aspect-[3/4] sm:aspect-[4/5] shadow-md hover:shadow-xl border border-gray-light/10 transition-all duration-350 h-full bg-neutral-100"
+                    className="group relative flex flex-col justify-end rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-light/10 transition-shadow duration-300 bg-neutral-100 block w-full"
+                    style={{ paddingBottom: "133.33%" /* fixed 3:4 aspect ratio via padding trick */ }}
                   >
-                    {/* Category Image Backdrop */}
-                    <div className="absolute inset-0 z-0">
+                    {/* Absolute fill container */}
+                    <div className="absolute inset-0">
+                      {/* Category Image */}
                       <Image
                         src={bgImg}
                         alt={cat.name}
                         fill
-                        sizes="(max-width: 640px) 50vw, 25vw"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
-                      {/* Gradient overlay for text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/35 to-transparent transition-opacity duration-300 group-hover:opacity-95" />
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent transition-opacity duration-300 group-hover:opacity-95" />
                     </div>
 
-                    {/* Category Text & Action */}
-                    <div className="relative z-10 p-5 sm:p-6 flex flex-col">
-                      <h3 className="font-serif text-lg sm:text-xl font-bold text-ivory tracking-wide">
+                    {/* Text */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 flex flex-col">
+                      <h3 className="font-serif text-base sm:text-lg font-bold text-ivory tracking-wide leading-tight">
                         {cat.name}
                       </h3>
-                      
-                      <div className="overflow-hidden mt-1.5">
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-rose-light uppercase tracking-[0.15em] transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                          Explore Collection
-                          <svg className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="overflow-hidden mt-1">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-light uppercase tracking-[0.15em] transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                          Explore
+                          <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                           </svg>
                         </span>
