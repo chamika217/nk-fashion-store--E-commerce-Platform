@@ -34,30 +34,50 @@ export default function NewArrivalsSection({
   loading,
 }: NewArrivalsSectionProps) {
   const [activeTab, setActiveTab] = useState("all");
+  const [tabChanging, setTabChanging] = useState(false);
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
   const reduce = useReducedMotion();
 
+  // Smooth tab switch — brief visual transition so layout shift feels intentional
+  function handleTabChange(tabId: string) {
+    if (tabId === activeTab) return;
+    setTabChanging(true);
+    setTimeout(() => {
+      setActiveTab(tabId);
+      setTabChanging(false);
+    }, 150);
+  }
+
   // Filter products by active tab
+  // NOTE: "mens" uses a word-boundary check so "women" doesn't match
   const filteredProducts = useMemo(() => {
     if (activeTab === "all") return products.slice(0, 8);
+
+    const cat = (p: Product) => p.category.toLowerCase();
+
     if (activeTab === "mens") {
       return products
-        .filter((p) => p.category.toLowerCase().includes("men"))
+        .filter((p) => {
+          const c = cat(p);
+          // match "men" but NOT "women" — check for men's specific patterns
+          return (c.includes("men") && !c.includes("women")) || c.includes("male");
+        })
         .slice(0, 8);
     }
     if (activeTab === "womens") {
       return products
-        .filter((p) => p.category.toLowerCase().includes("women"))
+        .filter((p) => cat(p).includes("women") || cat(p).includes("female"))
         .slice(0, 8);
     }
     if (activeTab === "kids") {
       return products
-        .filter(
-          (p) =>
-            p.category.toLowerCase().includes("kid") ||
-            p.category.toLowerCase().includes("access")
+        .filter((p) =>
+          cat(p).includes("kid") ||
+          cat(p).includes("child") ||
+          cat(p).includes("access") ||
+          cat(p).includes("bag")
         )
         .slice(0, 8);
     }
@@ -115,7 +135,7 @@ export default function NewArrivalsSection({
             {TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all duration-200 ${
                   activeTab === tab.id
                     ? "bg-ink text-ivory shadow-xs"
@@ -129,7 +149,7 @@ export default function NewArrivalsSection({
         </div>
 
         {/* Product Grid */}
-        {loading ? (
+        {(loading || tabChanging) ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {[...Array(8)].map((_, i) => (
               <div

@@ -3,73 +3,72 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
+  useCallback,
   type ReactNode,
 } from "react";
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
 interface WishlistContextValue {
-  wishlist: string[];
+  wishlist: string[];          // array of product IDs
   wishlistCount: number;
-  toggleWishlist: (productId: string) => void;
-  isInWishlist: (productId: string) => boolean;
+  isInWishlist: (id: string) => boolean;
+  toggleWishlist: (id: string) => void;
   clearWishlist: () => void;
 }
+
+// ── Context ──────────────────────────────────────────────────────────────────
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 
 const STORAGE_KEY = "nk-wishlist";
 
+// ── Provider ─────────────────────────────────────────────────────────────────
+
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([]);
-  const [mounted, setMounted] = useState(false);
 
+  // Hydrate from localStorage on mount (SSR-safe)
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setWishlist(JSON.parse(stored));
-      }
+      if (stored) setWishlist(JSON.parse(stored) as string[]);
     } catch {
-      // Ignore localStorage read errors
+      // corrupted storage — start fresh
     }
-    setMounted(true);
   }, []);
 
-  const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      const updated = prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId];
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore localStorage write errors
-      }
-      return updated;
-    });
-  };
-
-  const isInWishlist = (productId: string) => {
-    return wishlist.includes(productId);
-  };
-
-  const clearWishlist = () => {
-    setWishlist([]);
+  // Persist on every change
+  useEffect(() => {
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(wishlist));
     } catch {
-      // Ignore
+      // storage unavailable — ignore
     }
-  };
+  }, [wishlist]);
+
+  const isInWishlist = useCallback(
+    (id: string) => wishlist.includes(id),
+    [wishlist]
+  );
+
+  const toggleWishlist = useCallback((id: string) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }, []);
+
+  const clearWishlist = useCallback(() => setWishlist([]), []);
 
   return (
     <WishlistContext.Provider
       value={{
-        wishlist: mounted ? wishlist : [],
-        wishlistCount: mounted ? wishlist.length : 0,
-        toggleWishlist,
+        wishlist,
+        wishlistCount: wishlist.length,
         isInWishlist,
+        toggleWishlist,
         clearWishlist,
       }}
     >
@@ -78,10 +77,10 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useWishlist(): WishlistContextValue {
   const ctx = useContext(WishlistContext);
-  if (!ctx) {
-    throw new Error("useWishlist must be used within a WishlistProvider");
-  }
+  if (!ctx) throw new Error("useWishlist must be used inside <WishlistProvider>");
   return ctx;
 }
